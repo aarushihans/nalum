@@ -20,6 +20,14 @@ export interface Profile {
   campus?: string;
   current_company?: string;
   current_role?: string;
+  location?: {
+    city?: string;
+    country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
   social_media?: {
     linkedin?: string;
     github?: string;

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Profile = require("../../models/user/profile.model");
 const { protect } = require("../../middleware/auth");
+const { addToQueue } = require("../../services/geocodingQueue");
 
 // PUT /profile/update - Update existing profile
 router.put("/", protect, async (req, res) => {
@@ -20,6 +21,7 @@ router.put("/", protect, async (req, res) => {
       campus,
       current_company,
       current_role,
+      location,
       social_media,
       skills,
       experience,
@@ -61,9 +63,20 @@ router.put("/", protect, async (req, res) => {
     if (social_media !== undefined) profile.social_media = { ...profile.social_media, ...social_media };
     if (skills !== undefined) profile.skills = skills;
     if (experience !== undefined) profile.experience = experience;
+    if (location !== undefined) profile.location = location;
 
     await profile.save();
-    
+
+    // Queue for geocoding if location updated but no coordinates
+    if (
+      location &&
+      location.city &&
+      location.country &&
+      !location.coordinates
+    ) {
+      await addToQueue(userId, location.city, location.country);
+    }
+
     res.status(200).json({ message: "Profile updated successfully.", profile });
   } catch (err) {
     console.error("Profile update error:", err);

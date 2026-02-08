@@ -25,6 +25,24 @@ const profileSchema = new mongoose.Schema(
       enum: ["Main Campus", "East Campus", "West Campus"],
     },
 
+    // Location information (optional)
+    location: {
+      city: {
+        type: String,
+        lowercase: true, 
+        trim: true,
+      },
+      country: {
+        type: String,
+        lowercase: true, 
+        trim: true,
+      },
+      coordinates: {
+        lat: Number,
+        lng: Number,
+      },
+    },
+
     // Optional current employment
     current_company: {
       type: String,

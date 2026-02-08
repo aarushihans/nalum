@@ -1,9 +1,10 @@
-import Hero from '@/components/home/Hero';
-import IconCtaSection from '@/components/home/IconCtaSection';
-import ExploreLoginCta from '@/components/home/ExploreLoginCta';
-import NewsSection from '@/components/home/NewsSection';
-import BenefitsSection from '@/components/home/BenefitsSection';
-import GivingSection from '@/components/home/GivingSection';
+import Hero from "@/components/home/Hero";
+import IconCtaSection from "@/components/home/IconCtaSection";
+import ExploreLoginCta from "@/components/home/ExploreLoginCta";
+import NewsSection from "@/components/home/NewsSection";
+import BenefitsSection from "@/components/home/BenefitsSection";
+import GivingSection from "@/components/home/GivingSection";
+import AlumniMap from "@/components/home/AlumniMap";
 
 const HomePage = () => {
   return (
@@ -13,6 +14,7 @@ const HomePage = () => {
       <IconCtaSection />
       <NewsSection />
       <BenefitsSection />
+      <AlumniMap />
       <GivingSection />
     </main>
   );
