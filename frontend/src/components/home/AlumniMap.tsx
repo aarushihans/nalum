@@ -1,22 +1,37 @@
 import { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "@/lib/api";
 
 interface AlumniLocation {
   city: string;
   country: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
+  lat: number;
+  lng: number;
   count?: number;
+}
+
+// Component to track zoom changes
+function ZoomTracker({ setZoom }: { setZoom: (zoom: number) => void }) {
+  const map = useMapEvents({
+    zoomend: () => {
+      setZoom(map.getZoom());
+    },
+  });
+  return null;
 }
 
 const AlumniMap = () => {
   const [locations, setLocations] = useState<AlumniLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentZoom, setCurrentZoom] = useState(2);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -36,17 +51,56 @@ const AlumniMap = () => {
 
   const clusteredLocations = useMemo(() => {
     const clusters: Map<string, AlumniLocation> = new Map();
-    locations.forEach((loc) => {
-      const key = `${loc.city.toLowerCase()}-${loc.country.toLowerCase()}`;
-      if (clusters.has(key)) {
-        const existing = clusters.get(key)!;
-        existing.count = (existing.count || 1) + 1;
-      } else {
-        clusters.set(key, { ...loc, count: 1 });
-      }
-    });
+
+    if (currentZoom < 4) {
+      // Country-level clustering: Track cities per country to find max
+      const countryData: Map<
+        string,
+        { cities: AlumniLocation[]; totalCount: number }
+      > = new Map();
+
+      locations.forEach((loc) => {
+        const countryKey = loc.country.toLowerCase();
+        if (!countryData.has(countryKey)) {
+          countryData.set(countryKey, { cities: [], totalCount: 0 });
+        }
+        const data = countryData.get(countryKey)!;
+        data.cities.push(loc);
+        data.totalCount += 1;
+      });
+
+      // For each country, place marker at city with most alumni
+      countryData.forEach((data, countryKey) => {
+        const cityWithMax = data.cities.reduce((max, city) => {
+          const cityCount = data.cities.filter(
+            (c) => c.city === city.city,
+          ).length;
+          const maxCount = data.cities.filter(
+            (c) => c.city === max.city,
+          ).length;
+          return cityCount > maxCount ? city : max;
+        });
+
+        clusters.set(countryKey, {
+          ...cityWithMax,
+          count: data.totalCount,
+        });
+      });
+    } else {
+      // City-level clustering (zoom >= 5)
+      locations.forEach((loc) => {
+        const key = `${loc.city.toLowerCase()}-${loc.country.toLowerCase()}`;
+        if (clusters.has(key)) {
+          const existing = clusters.get(key)!;
+          existing.count = (existing.count || 1) + 1;
+        } else {
+          clusters.set(key, { ...loc, count: 1 });
+        }
+      });
+    }
+
     return Array.from(clusters.values());
-  }, [locations]);
+  }, [locations, currentZoom]);
 
   if (isLoading) {
     return (
@@ -116,24 +170,27 @@ const AlumniMap = () => {
           </p>
         </div>
 
-        <div className="w-full h-[500px] rounded-lg overflow-hidden shadow-lg">
+        <div className="w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden shadow-lg">
           <MapContainer
             center={[20, 0]}
             zoom={2}
+            minZoom={2}
+            maxZoom={18}
             style={{ height: "100%", width: "100%" }}
             className="z-0"
           >
+            <ZoomTracker setZoom={setCurrentZoom} />
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
             {clusteredLocations.map((cluster, idx) => {
               const radius = Math.min(8 + (cluster.count || 1) * 2, 30);
-              const opacity = Math.min(0.4 + (cluster.count || 1) * 0.1, 0.9);
+              const opacity = Math.min(0.3 + (cluster.count || 1) * 0.15, 0.95);
               return (
                 <CircleMarker
                   key={idx}
-                  center={[cluster.coordinates.lat, cluster.coordinates.lng]}
+                  center={[cluster.lat, cluster.lng]}
                   radius={radius}
                   fillColor="#ef4444"
                   color="#991b1b"
@@ -141,12 +198,18 @@ const AlumniMap = () => {
                   fillOpacity={opacity}
                 >
                   <Popup>
-                    <div className="text-sm">
-                      <strong>{cluster.city}</strong>
+                    <div className="text-sm md:text-base">
+                      {currentZoom < 4 ? (
+                        <strong>{cluster.country}</strong>
+                      ) : (
+                        <>
+                          <strong>{cluster.city}</strong>
+                          <br />
+                          {cluster.country}
+                        </>
+                      )}
                       <br />
-                      {cluster.country}
-                      <br />
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs md:text-sm text-gray-600">
                         {cluster.count} alumni
                       </span>
                     </div>

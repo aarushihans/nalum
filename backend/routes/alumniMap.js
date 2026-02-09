@@ -6,10 +6,9 @@ const Profile = require("../models/user/profile.model");
 router.get("/", async (req, res) => {
   try {
     // Find all profiles with valid location coordinates
-    // and populate the user to check if they're alumni
     const profilesWithLocations = await Profile.find({
-      "location.coordinates.lat": { $exists: true, $ne: null },
-      "location.coordinates.lng": { $exists: true, $ne: null },
+      "location.lat": { $exists: true, $ne: null },
+      "location.lng": { $exists: true, $ne: null },
     })
       .populate({
         path: "user",
@@ -24,7 +23,8 @@ router.get("/", async (req, res) => {
       .map((profile) => ({
         city: profile.location?.city || "Unknown",
         country: profile.location?.country || "Unknown",
-        coordinates: profile.location?.coordinates || { lat: 0, lng: 0 },
+        lat: profile.location?.lat || 0,
+        lng: profile.location?.lng || 0,
       }));
 
     res.status(200).json({ locations });

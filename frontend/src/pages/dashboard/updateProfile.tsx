@@ -33,6 +33,7 @@ import {
   POPULAR_ROLES,
   POPULAR_SKILLS,
 } from "@/lib/suggestions";
+import { validateTextInput } from "@/lib/validation";
 
 interface Experience {
   company: string;
@@ -61,6 +62,8 @@ const UpdateProfile = () => {
     location: {
       city: "",
       country: "",
+      lat: undefined,
+      lng: undefined,
     },
     social_media: {
       linkedin: "",
@@ -136,6 +139,8 @@ const UpdateProfile = () => {
         location: {
           city: contextProfile.location?.city || "",
           country: contextProfile.location?.country || "",
+          lat: contextProfile.location?.lat,
+          lng: contextProfile.location?.lng,
         },
         social_media: {
           linkedin: contextProfile.social_media?.linkedin || "",
@@ -373,6 +378,8 @@ const UpdateProfile = () => {
         location?: {
           city?: string;
           country?: string;
+          lat?: number;
+          lng?: number;
         };
         social_media?: {
           linkedin?: string;
@@ -665,13 +672,14 @@ const UpdateProfile = () => {
                 <LocationSelector
                   city={formData.location.city}
                   country={formData.location.country}
-                  onLocationChange={(newCity, newCountry, coordinates) => {
+                  onLocationChange={(newCity, newCountry, newLat, newLng) => {
                     setFormData((prev) => ({
                       ...prev,
                       location: {
                         city: newCity,
                         country: newCountry,
-                        coordinates,
+                        lat: newLat,
+                        lng: newLng,
                       },
                     }));
                   }}

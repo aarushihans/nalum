@@ -30,6 +30,7 @@ import {
 import nsutLogo from "@/assets/nsut-logo.svg";
 import nsutCampusHero from "@/assets/hero.webp";
 import { useAuth } from "../../context/AuthContext";
+import { validateTextInput } from "@/lib/validation";
 interface Experience {
   company: string;
   role: string;
@@ -80,9 +81,8 @@ const ProfileForm = () => {
   // Form state - Location (for alumni)
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
-  const [coordinates, setCoordinates] = useState<
-    { lat: number; lng: number } | undefined
-  >();
+  const [lat, setLat] = useState<number | undefined>();
+  const [lng, setLng] = useState<number | undefined>();
 
   // Form state - Additional Info
   const [skills, setSkills] = useState<string[]>([]);
@@ -211,10 +211,7 @@ const ProfileForm = () => {
 
     formData.append("social_media", JSON.stringify(socialLinks));
     if (city && country) {
-      formData.append(
-        "location",
-        JSON.stringify({ city, country, coordinates }),
-      );
+      formData.append("location", JSON.stringify({ city, country, lat, lng }));
     }
     if (skills.length > 0) formData.append("skills", JSON.stringify(skills));
     if (experience.length > 0)
@@ -559,12 +556,11 @@ const ProfileForm = () => {
                 <LocationSelector
                   city={city}
                   country={country}
-                  onLocationChange={(newCity, newCountry, coordinates) => {
+                  onLocationChange={(newCity, newCountry, newLat, newLng) => {
                     setCity(newCity);
                     setCountry(newCountry);
-                    if (coordinates) {
-                      setCoordinates(coordinates);
-                    }
+                    setLat(newLat);
+                    setLng(newLng);
                   }}
                   variant="light"
                 />

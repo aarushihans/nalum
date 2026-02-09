@@ -119,7 +119,7 @@ router.post(
         location &&
         location.city &&
         location.country &&
-        !location.coordinates
+        (!location.lat || !location.lng)
       ) {
         await addToQueue(userId, location.city, location.country);
       }

@@ -23,10 +23,8 @@ export interface Profile {
   location?: {
     city?: string;
     country?: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
+    lat?: number;
+    lng?: number;
   };
   social_media?: {
     linkedin?: string;

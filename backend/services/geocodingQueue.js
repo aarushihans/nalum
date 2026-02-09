@@ -62,10 +62,7 @@ async function geocodeLocation(city, country) {
 
     if (response.data && response.data.length > 0) {
       const result = response.data[0];
-      return {
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-      };
+      return [parseFloat(result.lat), parseFloat(result.lon)];
     }
 
     console.warn(`No geocoding results for: ${query}`);
@@ -100,15 +97,19 @@ async function processNextItem() {
     await redis.set(PROCESSING_KEY, userId, { EX: 60 });
 
     // Geocode the location
-    const coordinates = await geocodeLocation(city, country);
+    const result = await geocodeLocation(city, country);
 
-    if (coordinates) {
-      // Update user profile with coordinates
+    if (result) {
+      const [lat, lng] = result;
+      // Update user profile with lat/lng
       await Profile.findOneAndUpdate(
         { user: userId },
-        { "location.coordinates": coordinates },
+        {
+          "location.lat": lat,
+          "location.lng": lng,
+        },
       );
-      console.log(`✓ Geocoded user ${userId}: ${JSON.stringify(coordinates)}`);
+      console.log(`✓ Geocoded user ${userId}: lat=${lat}, lng=${lng}`);
 
       // Reset error count on success
       await redis.set(ERROR_COUNT_KEY, 0);

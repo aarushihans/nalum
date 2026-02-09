@@ -13,6 +13,7 @@ import { MapPin, AlertCircle } from "lucide-react";
 import { COUNTRIES } from "@/constants/countries";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { validateTextInput } from "@/lib/validation";
 
 interface LocationSelectorProps {
   city: string;
@@ -20,7 +21,8 @@ interface LocationSelectorProps {
   onLocationChange: (
     city: string,
     country: string,
-    coordinates?: { lat: number; lng: number },
+    lat?: number,
+    lng?: number,
   ) => void;
   variant?: "light" | "dark";
 }
@@ -71,7 +73,8 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           onLocationChange(
             detectedCity.toLowerCase(),
             detectedCountry.toLowerCase(),
-            { lat: latitude, lng: longitude },
+            latitude,
+            longitude,
           );
         } catch (error) {
           console.error("Error fetching location:", error);
@@ -103,6 +106,19 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   const handleManualUpdate = async () => {
     if (cityInput && countryInput) {
+      const cityValidation = validateTextInput(cityInput);
+      const countryValidation = validateTextInput(countryInput);
+
+      if (!cityValidation.isValid) {
+        toast.error(cityValidation.message);
+        return;
+      }
+
+      if (!countryValidation.isValid) {
+        toast.error(countryValidation.message);
+        return;
+      }
+
       // Try to geocode the manually entered location
       try {
         const query = `${cityInput}, ${countryInput}`;
@@ -112,22 +128,19 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
         );
         const data = await response.json();
         if (data && data.length > 0) {
-          const coordinates = {
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon),
-          };
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
           onLocationChange(
             cityInput.toLowerCase(),
             countryInput.toLowerCase(),
-            coordinates,
+            lat,
+            lng,
           );
         } else {
-          // No coordinates found, save without them
           onLocationChange(cityInput.toLowerCase(), countryInput.toLowerCase());
         }
       } catch (error) {
         console.error("Failed to geocode:", error);
-        // Save without coordinates if geocoding fails
         onLocationChange(cityInput.toLowerCase(), countryInput.toLowerCase());
       }
     }

@@ -29,17 +29,21 @@ const profileSchema = new mongoose.Schema(
     location: {
       city: {
         type: String,
-        lowercase: true, 
+        lowercase: true,
         trim: true,
       },
       country: {
         type: String,
-        lowercase: true, 
+        lowercase: true,
         trim: true,
       },
-      coordinates: {
-        lat: Number,
-        lng: Number,
+      lat: {
+        type: Number,
+        index: true, // Enable geospatial queries if needed later
+      },
+      lng: {
+        type: Number,
+        index: true,
       },
     },
 
@@ -75,7 +79,7 @@ const profileSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Profile", profileSchema);

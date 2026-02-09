@@ -30,9 +30,10 @@ router.put("/", protect, async (req, res) => {
     // Validate required fields if provided
     if (batch !== undefined || branch !== undefined || campus !== undefined) {
       if (!batch || !branch || !campus) {
-        return res
-          .status(400)
-          .json({ error: "If updating academic info, batch, branch, and campus are all required." });
+        return res.status(400).json({
+          error:
+            "If updating academic info, batch, branch, and campus are all required.",
+        });
       }
     }
 
@@ -40,9 +41,9 @@ router.put("/", protect, async (req, res) => {
     if (campus) {
       const validCampuses = ["Main Campus", "West Campus", "East Campus"];
       if (!validCampuses.includes(campus)) {
-        return res
-          .status(400)
-          .json({ error: `Invalid campus. Must be one of: ${validCampuses.join(", ")}` });
+        return res.status(400).json({
+          error: `Invalid campus. Must be one of: ${validCampuses.join(", ")}`,
+        });
       }
     }
 
@@ -67,12 +68,22 @@ router.put("/", protect, async (req, res) => {
 
     await profile.save();
 
+    // Invalidate alumni-map cache if location was updated
+    if (location && (location.city || location.country)) {
+      try {
+        const redis = getRedisClient();
+        await redis.del("alumni-map:locations");
+      } catch (cacheError) {
+        console.error("Failed to invalidate cache:", cacheError);
+      }
+    }
+
     // Queue for geocoding if location updated but no coordinates
     if (
       location &&
       location.city &&
       location.country &&
-      !location.coordinates
+      (!location.lat || !location.lng)
     ) {
       await addToQueue(userId, location.city, location.country);
     }
