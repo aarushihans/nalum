@@ -13,8 +13,8 @@ const HomePage = () => {
       <ExploreLoginCta />
       <IconCtaSection />
       <NewsSection />
-      <BenefitsSection />
       <AlumniMap />
+      <BenefitsSection />
       <GivingSection />
     </main>
   );
