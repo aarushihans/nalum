@@ -67,7 +67,9 @@ const ViewProfile = () => {
   const handleMessage = async () => {
     if (!profile) return;
     try {
-      const conversation = await createConversation.mutateAsync(profile.user._id);
+      const conversation = await createConversation.mutateAsync(
+        profile.user._id,
+      );
       navigate("/dashboard/chat", { state: { conversation } });
     } catch (error) {
       console.error("Failed to start conversation:", error);
@@ -79,7 +81,7 @@ const ViewProfile = () => {
       await api.post(
         "/chat/connections/request",
         { recipientId, requestMessage: message },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        { headers: { Authorization: `Bearer ${accessToken}` } },
       );
 
       // Refresh profile to update connection status
@@ -105,7 +107,7 @@ const ViewProfile = () => {
             color: "white",
             border: "2px solid #FFD700",
           },
-        }
+        },
       );
     }
   };
@@ -115,7 +117,7 @@ const ViewProfile = () => {
       await api.post(
         "/chat/connections/unblock-user",
         { userId: recipientId },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        { headers: { Authorization: `Bearer ${accessToken}` } },
       );
 
       // Refresh profile to update connection status
@@ -199,7 +201,6 @@ const ViewProfile = () => {
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
 
-
           {/* Profile Header */}
           <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-8 mb-6 overflow-visible">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -227,6 +228,31 @@ const ViewProfile = () => {
                     {profile.branch} • {profile.batch}
                   </span>
                 </div>
+                {(profile.location?.city || profile.location?.country) && (
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
+                    {profile.location.city && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                      >
+                        <MapPin className="h-3 w-3 mr-1" />
+                        <span className="capitalize">
+                          {profile.location.city}
+                        </span>
+                      </Badge>
+                    )}
+                    {profile.location.country && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                      >
+                        <span className="capitalize">
+                          {profile.location.country}
+                        </span>
+                      </Badge>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400 mb-4">
                   <MapPin className="h-5 w-5 text-blue-400" />
                   <span>{profile.campus}</span>
@@ -304,7 +330,9 @@ const ViewProfile = () => {
                       variant="outline"
                       size="icon"
                       className="bg-white/5 border-white/10 hover:bg-white/10"
-                      onClick={() => window.open(profile.social_media!.linkedin, "_blank")}
+                      onClick={() =>
+                        window.open(profile.social_media!.linkedin, "_blank")
+                      }
                     >
                       <Linkedin className="h-4 w-4 text-blue-400" />
                     </Button>
@@ -314,7 +342,9 @@ const ViewProfile = () => {
                       variant="outline"
                       size="icon"
                       className="bg-white/5 border-white/10 hover:bg-white/10"
-                      onClick={() => window.open(profile.social_media!.github, "_blank")}
+                      onClick={() =>
+                        window.open(profile.social_media!.github, "_blank")
+                      }
                     >
                       <Github className="h-4 w-4 text-gray-300" />
                     </Button>
@@ -324,7 +354,9 @@ const ViewProfile = () => {
                       variant="outline"
                       size="icon"
                       className="bg-white/5 border-white/10 hover:bg-white/10"
-                      onClick={() => window.open(profile.social_media!.twitter, "_blank")}
+                      onClick={() =>
+                        window.open(profile.social_media!.twitter, "_blank")
+                      }
                     >
                       <Twitter className="h-4 w-4 text-blue-400" />
                     </Button>
@@ -334,7 +366,12 @@ const ViewProfile = () => {
                       variant="outline"
                       size="icon"
                       className="bg-white/5 border-white/10 hover:bg-white/10"
-                      onClick={() => window.open(profile.social_media!.personal_website, "_blank")}
+                      onClick={() =>
+                        window.open(
+                          profile.social_media!.personal_website,
+                          "_blank",
+                        )
+                      }
                     >
                       <Globe className="h-4 w-4 text-blue-400" />
                     </Button>

@@ -25,6 +25,28 @@ const profileSchema = new mongoose.Schema(
       enum: ["Main Campus", "East Campus", "West Campus"],
     },
 
+    // Location information (optional)
+    location: {
+      city: {
+        type: String,
+        lowercase: true,
+        trim: true,
+      },
+      country: {
+        type: String,
+        lowercase: true,
+        trim: true,
+      },
+      lat: {
+        type: Number,
+        index: true, // Enable geospatial queries if needed later
+      },
+      lng: {
+        type: Number,
+        index: true,
+      },
+    },
+
     // Optional current employment
     current_company: {
       type: String,
@@ -57,7 +79,7 @@ const profileSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Profile", profileSchema);

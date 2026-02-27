@@ -26,12 +26,14 @@ import { useProfile, Profile } from "@/context/ProfileContext";
 import api from "@/lib/api";
 import UserAvatar from "@/components/UserAvatar";
 import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
+import LocationSelector from "@/components/profile/LocationSelector";
 import { toast } from "sonner";
 import {
   POPULAR_COMPANIES,
   POPULAR_ROLES,
   POPULAR_SKILLS,
 } from "@/lib/suggestions";
+import { validateTextInput } from "@/lib/validation";
 
 interface Experience {
   company: string;
@@ -57,6 +59,12 @@ const UpdateProfile = () => {
     campus: "",
     current_company: "",
     current_role: "",
+    location: {
+      city: "",
+      country: "",
+      lat: undefined,
+      lng: undefined,
+    },
     social_media: {
       linkedin: "",
       github: "",
@@ -128,6 +136,12 @@ const UpdateProfile = () => {
         campus: contextProfile.campus || "",
         current_company: contextProfile.current_company || "",
         current_role: contextProfile.current_role || "",
+        location: {
+          city: contextProfile.location?.city || "",
+          country: contextProfile.location?.country || "",
+          lat: contextProfile.location?.lat,
+          lng: contextProfile.location?.lng,
+        },
         social_media: {
           linkedin: contextProfile.social_media?.linkedin || "",
           github: contextProfile.social_media?.github || "",
@@ -157,7 +171,7 @@ const UpdateProfile = () => {
     handleInputChange("current_company", value);
     if (value.length > 0) {
       const filtered = POPULAR_COMPANIES.filter((company) =>
-        company.toLowerCase().includes(value.toLowerCase())
+        company.toLowerCase().includes(value.toLowerCase()),
       ).slice(0, 5);
       setFilteredCompanies(filtered);
       setShowCompanySuggestions(filtered.length > 0);
@@ -170,7 +184,7 @@ const UpdateProfile = () => {
     handleInputChange("current_role", value);
     if (value.length > 0) {
       const filtered = POPULAR_ROLES.filter((role) =>
-        role.toLowerCase().includes(value.toLowerCase())
+        role.toLowerCase().includes(value.toLowerCase()),
       ).slice(0, 5);
       setFilteredRoles(filtered);
       setShowRoleSuggestions(filtered.length > 0);
@@ -183,7 +197,7 @@ const UpdateProfile = () => {
     handleExperienceChange(index, "company", value);
     if (value.length > 0) {
       const filtered = POPULAR_COMPANIES.filter((company) =>
-        company.toLowerCase().includes(value.toLowerCase())
+        company.toLowerCase().includes(value.toLowerCase()),
       ).slice(0, 5);
       setExpCompanySuggestions((prev) => ({ ...prev, [index]: filtered }));
       setShowExpCompanySuggestions((prev) => ({
@@ -199,7 +213,7 @@ const UpdateProfile = () => {
     handleExperienceChange(index, "role", value);
     if (value.length > 0) {
       const filtered = POPULAR_ROLES.filter((role) =>
-        role.toLowerCase().includes(value.toLowerCase())
+        role.toLowerCase().includes(value.toLowerCase()),
       ).slice(0, 5);
       setExpRoleSuggestions((prev) => ({ ...prev, [index]: filtered }));
       setShowExpRoleSuggestions((prev) => ({
@@ -229,7 +243,7 @@ const UpdateProfile = () => {
     setNewSkill(value);
     if (value.length > 0) {
       const filtered = POPULAR_SKILLS.filter((skill) =>
-        skill.toLowerCase().includes(value.toLowerCase())
+        skill.toLowerCase().includes(value.toLowerCase()),
       ).slice(0, 8);
       setFilteredSkills(filtered);
       setShowSkillSuggestions(filtered.length > 0);
@@ -267,12 +281,12 @@ const UpdateProfile = () => {
   const handleExperienceChange = (
     index: number,
     field: keyof Experience,
-    value: string
+    value: string,
   ) => {
     setFormData((prev) => ({
       ...prev,
       experience: prev.experience.map((exp, i) =>
-        i === index ? { ...exp, [field]: value } : exp
+        i === index ? { ...exp, [field]: value } : exp,
       ),
     }));
   };
@@ -361,6 +375,12 @@ const UpdateProfile = () => {
         campus?: string;
         current_company?: string;
         current_role?: string;
+        location?: {
+          city?: string;
+          country?: string;
+          lat?: number;
+          lng?: number;
+        };
         social_media?: {
           linkedin?: string;
           github?: string;
@@ -392,12 +412,17 @@ const UpdateProfile = () => {
       if (formData.social_media)
         updateData.social_media = formData.social_media;
       if (formData.skills) updateData.skills = formData.skills;
+      if (
+        formData.location &&
+        (formData.location.city || formData.location.country)
+      )
+        updateData.location = formData.location;
 
       // Validate and sort experience entries
       if (formData.experience && formData.experience.length > 0) {
         // Filter out empty experience entries
         const filledExperiences = formData.experience.filter(
-          (exp) => exp.company || exp.role || exp.duration
+          (exp) => exp.company || exp.role || exp.duration,
         );
 
         // Validate each experience
@@ -449,8 +474,16 @@ const UpdateProfile = () => {
         });
       }
 
+      const locationChanged =
+        formData.location &&
+        (formData.location.city || formData.location.country) &&
+        (formData.location.city !== initialData?.location?.city ||
+          formData.location.country !== initialData?.location?.country);
+
       toast.success("Profile Updated!", {
-        description: "Your changes have been saved successfully",
+        description: locationChanged
+          ? "Your changes have been saved. Location will be added to the map soon."
+          : "Your changes have been saved successfully",
         style: {
           background: "#800000",
           color: "white",
@@ -627,6 +660,33 @@ const UpdateProfile = () => {
               </div>
             </div>
 
+            {/* Location (Alumni Only) */}
+            {isAlumni && (
+              <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6 overflow-visible">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Location
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Update your location to appear on the Alumni Network Map
+                </p>
+                <LocationSelector
+                  city={formData.location.city}
+                  country={formData.location.country}
+                  onLocationChange={(newCity, newCountry, newLat, newLng) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: {
+                        city: newCity,
+                        country: newCountry,
+                        lat: newLat,
+                        lng: newLng,
+                      },
+                    }));
+                  }}
+                />
+              </div>
+            )}
+
             {/* Current Position - Only visible for Alumni */}
             {isAlumni && (
               <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6 overflow-visible">
@@ -653,99 +713,93 @@ const UpdateProfile = () => {
                       className="bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/20"
                       autoComplete="off"
                     />
-                      {showRoleSuggestions &&
-                        filteredRoles.length > 0 &&
-                        createPortal(
-                          <div
-                            className="fixed z-[9999] bg-white/5 backdrop-blur-xl border border-white/15 rounded-md shadow-2xl max-h-60 overflow-auto"
-                            style={{
-                              left: roleInputRef.current?.getBoundingClientRect()
-                                .left,
-                              top:
-                                roleInputRef.current?.getBoundingClientRect()
-                                  .bottom! + 4,
-                              width:
-                                roleInputRef.current?.getBoundingClientRect()
-                                  .width,
-                            }}
-                          >
-                            {filteredRoles.map((role, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                className="w-full text-left px-4 py-2 text-white cursor-pointer rounded-md transition-all hover:bg-white/10 hover:backdrop-brightness-125 hover:!text-white focus:bg-white/10 focus:!text-white text-sm"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleInputChange("current_role", role);
-                                  setShowRoleSuggestions(false);
-                                }}
-                              >
-                                {role}
-                              </button>
-                            ))}
-                          </div>,
-                          document.body
-                        )}
-                    </div>
-                    <div className="space-y-2 relative">
-                      <Label
-                        htmlFor="current_company"
-                        className="text-gray-300"
-                      >
-                        Current Company
-                      </Label>
-                      <Input
-                        ref={companyInputRef}
-                        id="current_company"
-                        value={formData.current_company}
-                        onChange={(e) => handleCompanyChange(e.target.value)}
-                        onFocus={() =>
-                          formData.current_company &&
-                          setShowCompanySuggestions(true)
-                        }
-                        onBlur={() =>
-                          setTimeout(
-                            () => setShowCompanySuggestions(false),
-                            200
-                          )
-                        }
-                        placeholder="e.g., Google"
-                        className="bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/20"
-                        autoComplete="off"
-                      />
-                      {showCompanySuggestions &&
-                        filteredCompanies.length > 0 &&
-                        createPortal(
-                          <div
-                            className="fixed z-[9999] bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl max-h-60 overflow-auto"
-                            style={{
-                              left: companyInputRef.current?.getBoundingClientRect()
-                                .left,
-                              top:
-                                companyInputRef.current?.getBoundingClientRect()
-                                  .bottom! + 4,
-                              width:
-                                companyInputRef.current?.getBoundingClientRect()
-                                  .width,
-                            }}
-                          >
-                            {filteredCompanies.map((company, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                className="w-full text-left px-4 py-2.5 text-white cursor-pointer transition-all hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white text-sm font-medium"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleInputChange("current_company", company);
-                                  setShowCompanySuggestions(false);
-                                }}
-                              >
-                                {company}
-                              </button>
-                            ))}
-                          </div>,
-                          document.body
-                        )}
+                    {showRoleSuggestions &&
+                      filteredRoles.length > 0 &&
+                      createPortal(
+                        <div
+                          className="fixed z-[9999] bg-white/5 backdrop-blur-xl border border-white/15 rounded-md shadow-2xl max-h-60 overflow-auto"
+                          style={{
+                            left: roleInputRef.current?.getBoundingClientRect()
+                              .left,
+                            top:
+                              roleInputRef.current?.getBoundingClientRect()
+                                .bottom! + 4,
+                            width:
+                              roleInputRef.current?.getBoundingClientRect()
+                                .width,
+                          }}
+                        >
+                          {filteredRoles.map((role, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              className="w-full text-left px-4 py-2 text-white cursor-pointer rounded-md transition-all hover:bg-white/10 hover:backdrop-brightness-125 hover:!text-white focus:bg-white/10 focus:!text-white text-sm"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleInputChange("current_role", role);
+                                setShowRoleSuggestions(false);
+                              }}
+                            >
+                              {role}
+                            </button>
+                          ))}
+                        </div>,
+                        document.body,
+                      )}
+                  </div>
+                  <div className="space-y-2 relative">
+                    <Label htmlFor="current_company" className="text-gray-300">
+                      Current Company
+                    </Label>
+                    <Input
+                      ref={companyInputRef}
+                      id="current_company"
+                      value={formData.current_company}
+                      onChange={(e) => handleCompanyChange(e.target.value)}
+                      onFocus={() =>
+                        formData.current_company &&
+                        setShowCompanySuggestions(true)
+                      }
+                      onBlur={() =>
+                        setTimeout(() => setShowCompanySuggestions(false), 200)
+                      }
+                      placeholder="e.g., Google"
+                      className="bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/20"
+                      autoComplete="off"
+                    />
+                    {showCompanySuggestions &&
+                      filteredCompanies.length > 0 &&
+                      createPortal(
+                        <div
+                          className="fixed z-[9999] bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl max-h-60 overflow-auto"
+                          style={{
+                            left: companyInputRef.current?.getBoundingClientRect()
+                              .left,
+                            top:
+                              companyInputRef.current?.getBoundingClientRect()
+                                .bottom! + 4,
+                            width:
+                              companyInputRef.current?.getBoundingClientRect()
+                                .width,
+                          }}
+                        >
+                          {filteredCompanies.map((company, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              className="w-full text-left px-4 py-2.5 text-white cursor-pointer transition-all hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white text-sm font-medium"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleInputChange("current_company", company);
+                                setShowCompanySuggestions(false);
+                              }}
+                            >
+                              {company}
+                            </button>
+                          ))}
+                        </div>,
+                        document.body,
+                      )}
                   </div>
                 </div>
               </div>
@@ -808,7 +862,7 @@ const UpdateProfile = () => {
                     onChange={(e) =>
                       handleSocialMediaChange(
                         "personal_website",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     placeholder="https://yourwebsite.com"
@@ -872,7 +926,7 @@ const UpdateProfile = () => {
                             </button>
                           ))}
                         </div>,
-                        document.body
+                        document.body,
                       )}
                   </div>
                   <Button
@@ -968,7 +1022,7 @@ const UpdateProfile = () => {
                                     ...prev,
                                     [index]: false,
                                   })),
-                                200
+                                200,
                               )
                             }
                             placeholder="Company name"
@@ -1006,22 +1060,22 @@ const UpdateProfile = () => {
                                         handleExperienceChange(
                                           index,
                                           "company",
-                                          company
+                                          company,
                                         );
                                         setShowExpCompanySuggestions(
                                           (prev) => ({
                                             ...prev,
                                             [index]: false,
-                                          })
+                                          }),
                                         );
                                       }}
                                     >
                                       {company}
                                     </button>
-                                  )
+                                  ),
                                 )}
                               </div>,
-                              document.body
+                              document.body,
                             )}
                         </div>
                         <div className="space-y-2 relative">
@@ -1046,7 +1100,7 @@ const UpdateProfile = () => {
                                     ...prev,
                                     [index]: false,
                                   })),
-                                200
+                                200,
                               )
                             }
                             placeholder="Your role"
@@ -1082,7 +1136,7 @@ const UpdateProfile = () => {
                                       handleExperienceChange(
                                         index,
                                         "role",
-                                        role
+                                        role,
                                       );
                                       setShowExpRoleSuggestions((prev) => ({
                                         ...prev,
@@ -1094,7 +1148,7 @@ const UpdateProfile = () => {
                                   </button>
                                 ))}
                               </div>,
-                              document.body
+                              document.body,
                             )}
                         </div>
                         <div className="space-y-3">
@@ -1121,7 +1175,7 @@ const UpdateProfile = () => {
                                     handleExperienceChange(
                                       index,
                                       "duration",
-                                      end ? `${newStart} - ${end}` : newStart
+                                      end ? `${newStart} - ${end}` : newStart,
                                     );
                                   }}
                                 >
@@ -1169,7 +1223,7 @@ const UpdateProfile = () => {
                                     handleExperienceChange(
                                       index,
                                       "duration",
-                                      end ? `${newStart} - ${end}` : newStart
+                                      end ? `${newStart} - ${end}` : newStart,
                                     );
                                   }}
                                 >
@@ -1180,7 +1234,7 @@ const UpdateProfile = () => {
                                     <div className="grid grid-cols-3 gap-1 p-2 max-h-[240px] overflow-y-auto">
                                       {Array.from(
                                         { length: 30 },
-                                        (_, i) => new Date().getFullYear() - i
+                                        (_, i) => new Date().getFullYear() - i,
                                       ).map((y) => (
                                         <SelectItem
                                           key={y}
@@ -1223,14 +1277,18 @@ const UpdateProfile = () => {
                                       `${
                                         start ||
                                         "Jan " + new Date().getFullYear()
-                                      } - ${newEnd}`
+                                      } - ${newEnd}`,
                                     );
                                   }}
                                 >
                                   <SelectTrigger className="bg-black/20 border-white/10 text-white text-sm h-10">
                                     <SelectValue placeholder="Month" />
                                   </SelectTrigger>
-                                  <SelectContent className="bg-white/5 backdrop-blur-xl border border-white/15 shadow-2xl max-h-[300px]" position="popper" sideOffset={5}>
+                                  <SelectContent
+                                    className="bg-white/5 backdrop-blur-xl border border-white/15 shadow-2xl max-h-[300px]"
+                                    position="popper"
+                                    sideOffset={5}
+                                  >
                                     <div className="p-2 space-y-1">
                                       <SelectItem
                                         value="Present"
@@ -1285,7 +1343,7 @@ const UpdateProfile = () => {
                                         `${
                                           start ||
                                           "Jan " + new Date().getFullYear()
-                                        } - ${newEnd}`
+                                        } - ${newEnd}`,
                                       );
                                     }}
                                   >
@@ -1296,7 +1354,8 @@ const UpdateProfile = () => {
                                       <div className="grid grid-cols-3 gap-1 p-2 max-h-[240px] overflow-y-auto">
                                         {Array.from(
                                           { length: 30 },
-                                          (_, i) => new Date().getFullYear() - i
+                                          (_, i) =>
+                                            new Date().getFullYear() - i,
                                         ).map((y) => (
                                           <SelectItem
                                             key={y}
@@ -1329,7 +1388,9 @@ const UpdateProfile = () => {
         <div className="fixed bottom-20 md:bottom-8 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
           <div className="bg-foreground text-background px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-2xl border border-border min-w-[280px] md:min-w-[400px]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-              <p className="font-medium text-sm md:text-base">You have unsaved changes</p>
+              <p className="font-medium text-sm md:text-base">
+                You have unsaved changes
+              </p>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Button
                   variant="ghost"

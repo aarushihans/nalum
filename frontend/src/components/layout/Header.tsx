@@ -64,7 +64,7 @@ const Header = ({ setHeaderHeight }) => {
       >
         {/* === TOP BAR === */}
         <div
-          className={`hidden md:block bg-nsut-maroon text-white transition-all duration-300 ${scrolled ? "opacity-0 h-0 overflow-hidden" : "opacity-100 py-1"
+          className={`hidden md:block bg-nsut-maroon text-white transition-all duration-300 ${scrolled ? "opacity-0 h-0 overflow-hidden" : "opacity-100 py-2"
             }`}
           style={{ willChange: scrolled ? 'auto' : 'height, opacity' }}
         >
@@ -75,11 +75,11 @@ const Header = ({ setHeaderHeight }) => {
               rel="noopener noreferrer"
               className="flex items-center space-x-2"
             >
-              <span className="font-serif text-md">
+              <span className="font-serif text-l">
                 Netaji Subhas University of Technology
               </span>
             </a>
-            <div className="hidden md:flex items-center space-x-4 text-xs">
+            <div className="hidden md:flex items-center space-x-6 text-m">
               <Link to="/about" className="relative transition-colors duration-200 hover:text-nsut-yellow after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-0 after:h-px after:bg-nsut-yellow after:transition-all after:duration-300 hover:after:w-full">
                 About
               </Link>
@@ -88,7 +88,7 @@ const Header = ({ setHeaderHeight }) => {
               </Link>
               <a
                 href="/giving"
-                className="bg-nsut-yellow text-nsut-maroon font-bold py-1 px-3 rounded text-xs relative z-10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-nsut-yellow/40"
+                className="bg-nsut-yellow text-nsut-maroon font-bold py-2 px-4 rounded text-xs relative z-10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-nsut-yellow/40"
               >
                 Make a Gift
               </a>

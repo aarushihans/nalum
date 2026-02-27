@@ -100,7 +100,9 @@ const ShowProfile = () => {
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <p className="text-gray-600 mb-4">Profile not found</p>
-            <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+            <Button onClick={() => navigate("/dashboard")}>
+              Go to Dashboard
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -154,12 +156,51 @@ const ShowProfile = () => {
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start mt-3">
-                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 border border-blue-500/20">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 border border-blue-500/20"
+                    >
                       {profile.batch}
                     </Badge>
-                    <Badge variant="secondary" className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10">{profile.branch}</Badge>
-                    <Badge variant="secondary" className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10">{profile.campus}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                    >
+                      {profile.branch}
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                    >
+                      {profile.campus}
+                    </Badge>
                   </div>
+                  {profile.location &&
+                    (profile.location.city || profile.location.country) && (
+                      <div className="flex flex-wrap gap-2 justify-center md:justify-start mt-2">
+                        {profile.location.city && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                          >
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span className="capitalize">
+                              {profile.location.city}
+                            </span>
+                          </Badge>
+                        )}
+                        {profile.location.country && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                          >
+                            <span className="capitalize">
+                              {profile.location.country}
+                            </span>
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                 </div>
                 <Button
                   onClick={() => navigate("/dashboard/update-profile")}
@@ -169,7 +210,6 @@ const ShowProfile = () => {
                   Edit Profile
                 </Button>
               </div>
-
 
               {/* Social Links */}
               {profile.social_media && (
@@ -255,22 +295,30 @@ const ShowProfile = () => {
             <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6">
               <div className="flex items-center gap-2 mb-6">
                 <GraduationCap className="h-5 w-5 text-blue-400" />
-                <h3 className="text-lg font-semibold text-white">Academic Information</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Academic Information
+                </h3>
               </div>
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-400">Batch</p>
-                  <p className="text-lg font-semibold text-gray-200">{profile.batch}</p>
+                  <p className="text-lg font-semibold text-gray-200">
+                    {profile.batch}
+                  </p>
                 </div>
                 <Separator className="bg-white/10" />
                 <div>
                   <p className="text-sm text-gray-400">Branch</p>
-                  <p className="text-lg font-semibold text-gray-200">{profile.branch}</p>
+                  <p className="text-lg font-semibold text-gray-200">
+                    {profile.branch}
+                  </p>
                 </div>
                 <Separator className="bg-white/10" />
                 <div>
                   <p className="text-sm text-gray-400">Campus</p>
-                  <p className="text-lg font-semibold text-gray-200">{profile.campus}</p>
+                  <p className="text-lg font-semibold text-gray-200">
+                    {profile.campus}
+                  </p>
                 </div>
               </div>
             </div>
@@ -279,7 +327,9 @@ const ShowProfile = () => {
             <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Briefcase className="h-5 w-5 text-blue-400" />
-                <h3 className="text-lg font-semibold text-white">Current Position</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Current Position
+                </h3>
               </div>
               <div className="space-y-4">
                 {profile.current_company || profile.current_role ? (
@@ -287,19 +337,27 @@ const ShowProfile = () => {
                     {profile.current_role && (
                       <div>
                         <p className="text-sm text-gray-400">Role</p>
-                        <p className="text-lg font-semibold text-gray-200">{profile.current_role}</p>
+                        <p className="text-lg font-semibold text-gray-200">
+                          {profile.current_role}
+                        </p>
                       </div>
                     )}
-                    {profile.current_company && profile.current_role && <Separator className="bg-white/10" />}
+                    {profile.current_company && profile.current_role && (
+                      <Separator className="bg-white/10" />
+                    )}
                     {profile.current_company && (
                       <div>
                         <p className="text-sm text-gray-400">Company</p>
-                        <p className="text-lg font-semibold text-gray-200">{profile.current_company}</p>
+                        <p className="text-lg font-semibold text-gray-200">
+                          {profile.current_company}
+                        </p>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-gray-500 italic">No current position specified</p>
+                  <p className="text-gray-500 italic">
+                    No current position specified
+                  </p>
                 )}
               </div>
             </div>
@@ -313,7 +371,11 @@ const ShowProfile = () => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {profile.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10">
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+                    >
                       {skill}
                     </Badge>
                   ))}
@@ -323,23 +385,44 @@ const ShowProfile = () => {
 
             {/* Experience */}
             {profile.experience && profile.experience.length > 0 && (
-              <div className={`rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6 ${profile.skills && profile.skills.length > 0 ? "" : "lg:col-span-2"}`}>
+              <div
+                className={`rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6 ${profile.skills && profile.skills.length > 0 ? "" : "lg:col-span-2"}`}
+              >
                 <div className="flex items-center gap-2 mb-6">
                   <Briefcase className="h-5 w-5 text-blue-400" />
-                  <h3 className="text-lg font-semibold text-white">Experience</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    Experience
+                  </h3>
                 </div>
                 <div className="space-y-6">
                   {profile.experience.map((exp, index) => (
-                    <div key={index} className="relative pl-6 pb-6 border-l-2 border-blue-500/30 last:pb-0">
+                    <div
+                      key={index}
+                      className="relative pl-6 pb-6 border-l-2 border-blue-500/30 last:pb-0"
+                    >
                       {/* Timeline dot */}
                       <div className="absolute left-[-5px] top-0 w-3 h-3 rounded-full bg-blue-500 border-2 border-slate-950"></div>
 
                       <div className="space-y-1">
-                        <p className="font-semibold text-lg text-white">{exp.role}</p>
-                        <p className="text-blue-400 font-medium">{exp.company}</p>
+                        <p className="font-semibold text-lg text-white">
+                          {exp.role}
+                        </p>
+                        <p className="text-blue-400 font-medium">
+                          {exp.company}
+                        </p>
                         <p className="text-sm text-gray-400 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
                           {exp.duration}
                         </p>
