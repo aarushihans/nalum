@@ -14,7 +14,6 @@ const Header = ({ setHeaderHeight }) => {
   const navLinks = {
     "Communities": [
       "Clubs",
-      "Recent Grads",
       "Industries",
     ],
     Benefits: [

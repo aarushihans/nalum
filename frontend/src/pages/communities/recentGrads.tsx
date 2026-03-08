@@ -141,11 +141,11 @@ const RecentGradsPage = () => {
           <div className="flex items-center gap-4 mb-6 animate-fade-in">
             <GraduationCap className="w-12 h-12 text-nsut-yellow" />
             <h1 className="font-serif text-5xl md:text-6xl font-bold">
-              Recent Graduates
+              Convocation 2025
             </h1>
           </div>
           <p className="text-xl md:text-2xl max-w-5xl leading-relaxed opacity-95 animation-delay-300 animate-fade-in">
-            Convocation 2025 - A Milestone Moment
+            Third Convocation Ceremony — A Milestone Moment
           </p>
           <p className="text-lg max-w-5xl mt-4 leading-relaxed opacity-90 animation-delay-500 animate-fade-in">
             Welcoming the Class of 2025 into a Global Community of NSUT Alumni
