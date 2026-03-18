@@ -21,6 +21,7 @@ interface NotificationItemProps {
     priority: 'low' | 'medium' | 'high' | 'urgent';
     read: boolean;
     createdAt: string;
+    metadata?: Record<string, any>;
   };
   onClose: () => void;
 }
@@ -33,7 +34,7 @@ export const NotificationItem = ({ notification, onClose }: NotificationItemProp
     if (!notification.read) {
       await markAsRead(notification.id);
     }
-    
+
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
       onClose();
@@ -58,7 +59,7 @@ export const NotificationItem = ({ notification, onClose }: NotificationItemProp
       <div className="flex gap-3">
         {/* Avatar */}
         {notification.sender && (
-          <UserAvatar 
+          <UserAvatar
             name={notification.sender.name}
             src={notification.sender.profilePicture}
             size="sm"

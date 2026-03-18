@@ -119,7 +119,7 @@ exports.sendConnectionRequest = async (req, res) => {
 
     // Create notification for connection request
     try {
-      const requester = await User.findById(requesterId).select('name');
+      const requester = await User.findById(requesterId).select('name role');
       await notificationService.createNotification({
         userId: recipientId,
         type: 'connection_request',
@@ -129,6 +129,7 @@ exports.sendConnectionRequest = async (req, res) => {
         metadata: {
           requesterId: requesterId,
           requesterName: requester.name,
+          requesterRole: requester.role,
           connectionId: connection._id
         }
       });
@@ -298,7 +299,7 @@ exports.getPendingRequests = async (req, res) => {
       recipient: userId,
       status: "pending",
     })
-      .populate("requester", "name email profilePicture")
+      .populate("requester", "name email profilePicture role")
       .sort({ createdAt: -1 });
 
     res.json({

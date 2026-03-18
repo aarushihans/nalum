@@ -17,6 +17,7 @@ interface Notification {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   read: boolean;
   createdAt: string;
+  metadata?: Record<string, any>;
 }
 
 interface NotificationContextType {

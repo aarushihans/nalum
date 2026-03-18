@@ -14,7 +14,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 }
 
 class NotificationService {
-  
+
   /**
    * Create and send a notification
    */
@@ -41,7 +41,7 @@ class NotificationService {
       console.log('Priority:', priority);
       console.log('Action URL:', actionUrl);
       console.log('Metadata:', JSON.stringify(metadata, null, 2));
-      
+
       // Check user preferences
       const preferences = await this.getUserPreferences(recipientId);
       console.log('📋 User Preferences Retrieved:', {
@@ -50,7 +50,7 @@ class NotificationService {
         mutedTypes: preferences.inApp.mutedTypes,
         dndEnabled: preferences.doNotDisturb.enabled
       });
-      
+
       // Check if type is muted
       if (preferences.inApp.mutedTypes.includes(type)) {
         console.log('🔇 NOTIFICATION MUTED - Type is in muted list');
@@ -77,7 +77,7 @@ class NotificationService {
         if (existingNotification) {
           console.log('♻️  Found existing notification, updating instead of creating new');
           console.log('   Existing ID:', existingNotification._id);
-          
+
           // Update the existing notification with new message
           existingNotification.message = message;
           existingNotification.metadata = metadata;
@@ -170,7 +170,7 @@ class NotificationService {
   async sendInApp(notification) {
     try {
       const io = global.io;
-      
+
       if (!io) {
         console.warn('Socket.io not available');
         return false;
@@ -189,6 +189,7 @@ class NotificationService {
         actionUrl: notification.actionUrl,
         priority: notification.priority,
         createdAt: notification.createdAt,
+        metadata: notification.metadata,
       });
 
       // Also update badge count
@@ -279,9 +280,9 @@ class NotificationService {
 
       const results = await Promise.allSettled(pushPromises);
       const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
-      
+
       console.log(`   📊 Push Results: ${successCount}/${subscriptions.length} successful`);
-      
+
       return results.some(r => r.status === 'fulfilled' && r.value === true);
 
     } catch (error) {
@@ -347,7 +348,7 @@ class NotificationService {
 
     const now = new Date();
     const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
+
     const start = preferences.doNotDisturb.start;
     const end = preferences.doNotDisturb.end;
 
@@ -446,7 +447,7 @@ class NotificationService {
    */
   async getUserNotifications(userId, { page = 1, limit = 20, unreadOnly = false }) {
     const query = { recipient: userId };
-    
+
     if (unreadOnly) {
       query.read = false;
     }
