@@ -121,4 +121,6 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             docker compose up -d --build backend
+            docker compose ps backend
+            curl --fail --silent --show-error http://127.0.0.1:2478/api/health
             docker image prune -f

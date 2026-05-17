@@ -141,4 +141,6 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             docker compose up -d --build frontend
+            docker compose ps frontend
+            curl --fail --silent --show-error http://127.0.0.1:3000
             docker image prune -f
