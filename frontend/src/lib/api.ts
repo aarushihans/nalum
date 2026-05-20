@@ -32,6 +32,24 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let isRefreshing = false;
+interface FailedRequest {
+  resolve: (token: string) => void;
+  reject: (err: any) => void;
+}
+let failedQueue: FailedRequest[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -43,7 +61,22 @@ api.interceptors.response.use(
       originalRequest.headers.Authorization &&
       !originalRequest._retry
     ) {
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
         const response = await refreshApi.post(
           "/auth/refresh",
@@ -52,27 +85,32 @@ api.interceptors.response.use(
         );
         const newAccessToken = response.data.data.access_token;
         const userData = response.data.data.user;
-        
+
         // Update the access token
         setAuthToken(newAccessToken);
-        
-        // Update localStorage
-        localStorage.setItem("accessToken", newAccessToken);
+
+        // Update cookies
+        document.cookie = `access_token=${newAccessToken}; path=/; max-age=1800; SameSite=Lax; secure=${window.location.protocol === 'https:'}`;
         if (userData) {
           localStorage.setItem("user", JSON.stringify(userData));
         }
-        
+
         // Dispatch event to update AuthContext
-        window.dispatchEvent(new CustomEvent("token-refreshed", { 
-          detail: { 
-            accessToken: newAccessToken, 
-            user: userData 
-          } 
+        window.dispatchEvent(new CustomEvent("token-refreshed", {
+          detail: {
+            accessToken: newAccessToken,
+            user: userData
+          }
         }));
-        
+
+        processQueue(null, newAccessToken);
+        isRefreshing = false;
+
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
+        processQueue(refreshError, null);
+        isRefreshing = false;
         // Handle refresh token failure (e.g., redirect to login)
         window.dispatchEvent(new Event("auth-error"));
         return Promise.reject(refreshError);
