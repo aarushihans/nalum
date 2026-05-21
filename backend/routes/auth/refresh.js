@@ -36,7 +36,7 @@ router.post("/", async (req, res) => {
   // Set refresh token in httpOnly cookie
   res.cookie("refresh_token", new_refresh_token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
     path: "/",
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days

@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const app = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 const authRoutes = require("./routes/auth/index.js");
 const cors = require("cors");
