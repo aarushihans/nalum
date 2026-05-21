@@ -83,11 +83,10 @@ const Login = () => {
     setIsLoading(true);
     try {
       const response = await apiClient.post("/auth/sign-in", formData);
-      const { access_token, email, user } = response.data.data;
-      const verified_alumni = user?.verified_alumni || false;
+      const { access_token, user } = response.data.data;
 
       // Set full user data in auth context
-      setAuth(access_token, email, verified_alumni, user);
+      setAuth(access_token, user);
 
       trackLogin(formData.role);
 

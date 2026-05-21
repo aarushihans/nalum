@@ -31,25 +31,18 @@ router.post("/", async (req, res) => {
   }
 
   // store refresh token in httpOnly cookie only and don't expose it in the response
-  const { refresh_token: new_refresh_token, access_token, ...rest } = data.data;
+  const { refresh_token: new_refresh_token, ...rest } = data.data;
   
   // Set refresh token in httpOnly cookie
   res.cookie("refresh_token", new_refresh_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "lax",
     path: "/",
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
   });
 
-  // Set access token in client-accessible cookie
-  res.cookie("access_token", access_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-    maxAge: 30 * 60 * 1000, // 30 minutes
-  });
+  const access_token = data.data.access_token;
 
   return res.status(200).json({
     error: false,

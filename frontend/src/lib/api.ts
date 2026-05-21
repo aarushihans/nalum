@@ -9,106 +9,36 @@ export const setAuthToken = (token: string | null) => {
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000, // 60 seconds timeout for slow Render cold starts
-  withCredentials: true, // Enable sending/receiving cookies
+  timeout: 60000,
+  withCredentials: true,
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
 });
 
-const refreshApi = axios.create({
-  baseURL: BASE_URL,
-  timeout: 60000, // 60 seconds timeout
-  withCredentials: true, // Enable sending/receiving cookies
-  headers: {
-    "ngrok-skip-browser-warning": "true",
-  },
-});
-
-// No request interceptor needed — httpOnly cookies are sent automatically by the browser
-
-let isRefreshing = false;
-interface FailedRequest {
-  resolve: (token: string) => void;
-  reject: (err: any) => void;
-}
-let failedQueue: FailedRequest[] = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token!);
+api.interceptors.request.use(
+  (config) => {
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
-  });
-  failedQueue = [];
-};
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
+
   async (error) => {
-    const originalRequest = error.config;
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => {
-            return api(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
+    if (error.response?.status === 401) {
+      console.error("Unauthorized");
 
-      originalRequest._retry = true;
-      isRefreshing = true;
+      localStorage.removeItem("user");
 
-      try {
-        const response = await refreshApi.post(
-          "/auth/refresh",
-          {},
-          { withCredentials: true }
-        );
-        const newAccessToken = response.data.data.access_token;
-        const userData = response.data.data.user;
-
-        // Update the access token
-        setAuthToken(newAccessToken);
-
-        // access_token cookie is now set by the server (httpOnly)
-        // No need to set it client-side
-        if (userData) {
-          localStorage.setItem("user", JSON.stringify(userData));
-        }
-
-        // Dispatch event to update AuthContext
-        window.dispatchEvent(new CustomEvent("token-refreshed", {
-          detail: {
-            accessToken: newAccessToken,
-            user: userData
-          }
-        }));
-
-        processQueue(null, newAccessToken);
-        isRefreshing = false;
-
-        // Retry the original request — the new access_token cookie is sent automatically
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        isRefreshing = false;
-        // Handle refresh token failure (e.g., redirect to login)
-        window.dispatchEvent(new Event("auth-error"));
-        return Promise.reject(refreshError);
-      }
+      window.location.href = "/login";
     }
+
     return Promise.reject(error);
   }
 );

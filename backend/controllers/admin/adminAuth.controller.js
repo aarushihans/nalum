@@ -71,22 +71,15 @@ exports.login = async (req, res) => {
     );
 
     // Extract refresh token and set it in cookie
-    const { refresh_token, access_token, ...rest } = sessionData.data;
+    const { refresh_token, ...rest } = sessionData.data;
     res.cookie("refresh_token", refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite:"lax",
       path: "/",
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
     });
-
-    res.cookie("access_token", access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/",
-      maxAge: 30 * 60 * 1000, // 30 minutes
-    });
+    const access_token = sessionData.data.access_token;
 
     // Send response
     res.status(200).json({
@@ -123,14 +116,14 @@ exports.logout = async (req, res) => {
     res.clearCookie("refresh_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite:"lax",
       path: "/",
     });
 
     res.clearCookie("access_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite:"lax",
       path: "/",
     });
 

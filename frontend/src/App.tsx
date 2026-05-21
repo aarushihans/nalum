@@ -23,14 +23,14 @@ const queryClient = new QueryClient({
 
 // App Content with Session Check
 function AppContent() {
-  const { isRestoringSession } = useAuth();
+  const { isLoading } = useAuth();
   const location = useLocation();
   const [showIntro, setShowIntro] = useState(location.pathname === "/");
 
   // Automatic page-view tracking for every route change
   usePageTracking();
 
-  if (isRestoringSession) {
+  if (isLoading) {
     return <SessionLoadingScreen />;
   }
 

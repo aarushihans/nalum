@@ -86,25 +86,18 @@ router.post("/", async (req, res) => {
     return res.status(500).json(sessionData);
   }
 
-  const { refresh_token, access_token, ...rest } = sessionData.data;
+  const { refresh_token, ...rest } = sessionData.data;
   
   // Set refresh token in httpOnly cookie
   res.cookie("refresh_token", refresh_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "lax",
     path: "/",
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
   });
-
-  // Set access token in client-accessible cookie
-  res.cookie("access_token", access_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-    maxAge: 30 * 60 * 1000, // 30 minutes
-  });
+  
+  const access_token = sessionData.data.access_token;
 
   return res.status(200).json({
     error: false,
