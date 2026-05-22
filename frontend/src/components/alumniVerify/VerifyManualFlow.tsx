@@ -9,6 +9,7 @@ import {
 import VerifyManualForm from "./VerifyManualForm";
 import SelectMatchModal from "./SelectMatchModal";
 import axios from "axios";
+import { userEvent } from "@testing-library/user-event";
 
 interface Match {
   name: string;
@@ -32,7 +33,7 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
   });
   const [matches, setMatches] = useState<Match[]>([]);
   const { toast } = useToast();
-  const { setAuth, accessToken, email } = useAuth();
+  const { setAuth, accessToken, user } = useAuth();
 
   // Fetch user profile data on component mount
   useEffect(() => {
@@ -111,7 +112,9 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
       await confirmAlumniMatch({ roll_no: match.roll_no });
 
       // Update auth context with verified status
-      setAuth(accessToken, email, true);
+      if (accessToken && user) {
+        setAuth(accessToken, { ...user, verified_alumni: true });
+      }
 
       toast({
         title: "Verification Successful! 🎉",

@@ -7,10 +7,10 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { accessToken, isRestoringSession } = useAuth();
+  const { accessToken, isLoading } = useAuth();
 
   // Show loading while checking for active session
-  if (isRestoringSession) {
+  if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
         <div className="text-center">

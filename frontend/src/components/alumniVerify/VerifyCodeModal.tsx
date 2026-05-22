@@ -26,7 +26,7 @@ const VerifyCodeModal = ({ isOpen, onClose }: VerifyCodeModalProps) => {
   const [error, setError] = useState("");
   const [view, setView] = useState<"code" | "manual">("code");
   const { toast } = useToast();
-  const { setAuth, accessToken, email } = useAuth();
+  const { setAuth, accessToken } = useAuth();
 
   const handleClose = () => {
     setView("code");
@@ -49,7 +49,7 @@ const VerifyCodeModal = ({ isOpen, onClose }: VerifyCodeModalProps) => {
 
       if (response.data.success) {
         // Update auth context with verified status
-        setAuth(accessToken, email, true);
+        setAuth(accessToken, response.data.data.user);
 
         toast({
           title: "Verification Successful! 🎉",
