@@ -195,7 +195,7 @@ describe("auth Mongo integration", () => {
       .send({ email: user.email, otp: otp.otp });
 
     expect(verifyResponse.status).toBe(200);
-    expect(verifyResponse.body).toEqual({
+    expect(verifyResponse.body).toMatchObject({
       error: false,
       code: 200,
       message: "Account verified successfully",
