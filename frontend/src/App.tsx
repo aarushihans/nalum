@@ -43,14 +43,16 @@ function AppContent() {
   return (
     <>
       {/* removing the notification provider for now as it is causing some issues with the auth provider. Will add it back later. */}
-      <AuthErrorHandler />
+        <AuthErrorHandler />
       {showIntro && (
         <LoadingAnimation onAnimationComplete={() => setShowIntro(false)} />
       )}
+      <NotificationProvider>
       <TooltipProvider>
         <AppRoutes />
         <Toaster />
       </TooltipProvider>
+      </NotificationProvider>
     </>
   );
 }
