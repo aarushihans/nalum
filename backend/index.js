@@ -104,6 +104,11 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "Backend is working!" });
 });
 
+// api to check which commit is deployed
+app.get("/api/version", (req, res) => {
+  res.status(200).json({ commit: process.env.COMMIT_SHA || "unknown" });
+});
+
 const port = process.env.PORT;
 
 async function startServer() {
