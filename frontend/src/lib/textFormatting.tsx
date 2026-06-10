@@ -81,6 +81,7 @@ const parsePlainMentions = (
 // ── Simple mention renderer (no markdown, just mentions) ─────────────────────
 // Handles both legacy @[Name](id) tokens and plain @Name mentions.
 export const renderMentions = (text: string): (string | JSX.Element)[] => {
+  if (!text) return [];
   // First resolve legacy tokens, then plain @mentions on leftover strings
   const afterLegacy = parseMentionSegment(text, 0, 0);
   return afterLegacy.flatMap((part, i) => {

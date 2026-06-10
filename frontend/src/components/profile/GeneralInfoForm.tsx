@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BRANCHES, CAMPUSES } from "@/constants/branches";
+import BatchYearSelect from "@/components/BatchYearSelect";
 
 interface GeneralInfoFormProps {
   batch: string;
@@ -17,11 +18,6 @@ interface GeneralInfoFormProps {
   campus: string;
   setCampus: (value: string) => void;
 }
-
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: currentYear - 1983 + 1 }, (_, i) =>
-  String(currentYear - i)
-);
 
 const GeneralInfoForm: React.FC<GeneralInfoFormProps> = ({
   batch,
@@ -35,18 +31,13 @@ const GeneralInfoForm: React.FC<GeneralInfoFormProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div>
         <Label htmlFor="batch">Batch (Year of Entry)</Label>
-        <Select onValueChange={setBatch} value={batch}>
-          <SelectTrigger id="batch" className="bg-white/80 text-black">
-            <SelectValue placeholder="Select your batch" />
-          </SelectTrigger>
-          <SelectContent>
-            {years.map((year) => (
-              <SelectItem key={year} value={year}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <BatchYearSelect
+          id="batch"
+          value={batch}
+          onValueChange={setBatch}
+          mode="student"
+          placeholder="Select your batch"
+        />
       </div>
       <div>
         <Label htmlFor="branch">Branch</Label>

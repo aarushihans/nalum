@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,12 +17,12 @@ import { Mail, Lock, User, Briefcase, Eye, EyeOff } from "lucide-react";
 import nsutLogo from "@/assets/nsut-logo.svg";
 import nsutCampusHero from "@/assets/hero.webp";
 import { useAuth } from "@/context/AuthContext";
+import { resolvePostLoginPath } from "@/lib/roleConfig";
 import { trackSignUp, trackEvent } from "@/lib/analytics";
 
 const Signup = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,28 +37,11 @@ const Signup = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    const checkProfileAndRedirect = async () => {
-      if (accessToken) {
-        try {
-          const profileStatusResponse = await api.get("/profile/status", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-
-          if (!profileStatusResponse.data.profileCompleted) {
-            navigate('/profile-form', { replace: true });
-          } else {
-            navigate('/dashboard', { replace: true });
-          }
-        } catch (error) {
-          console.error("Error checking profile status:", error);
-          // If there's an error checking profile, just go to dashboard
-          navigate('/dashboard', { replace: true });
-        }
-      }
-    };
-
-    checkProfileAndRedirect();
-  }, [accessToken, navigate]);
+    if (!accessToken || !user) return;
+    resolvePostLoginPath(user.role, accessToken).then(path =>
+      navigate(path, { replace: true })
+    );
+  }, [accessToken, user]);
   const [unverifiedEmail, setUnverifiedEmail] = useState(false);
 
   const handleChange = (field: string, value: string) => {
@@ -122,15 +105,14 @@ const Signup = () => {
 
       // Check if user exists but needs verification
       if (response.data.needsVerification) {
-        toast({
-          title: "Account already exists",
-          description: "Please verify your email to continue. Redirecting to verification page..."
+        toast("Account already exists", {
+          description: "Please verify your email to continue. Redirecting to verification page...",
         });
         navigate("/otp-verification", { state: { email: formData.email } });
         return;
       }
 
-      toast({ title: "Registration successful! Please verify your email." });
+      toast.success("Registration successful! Please verify your email.");
       trackSignUp(formData.role);
       navigate("/otp-verification", { state: { email: formData.email } });
     } catch (error: unknown) {
@@ -142,25 +124,18 @@ const Signup = () => {
         const errorCode = error.response?.data?.code;
         if (errorCode === "USER_NOT_VERIFIED") {
           setUnverifiedEmail(true);
-          toast({
-            title: "Email not verified",
+          toast.error("Email not verified", {
             description: "This email is already registered but not verified.",
-            variant: "destructive",
           });
         } else if (errorCode === "USER_ALREADY_EXISTS" || error.response?.status === 409) {
-          toast({
-            title: "User already exists",
+          toast.error("User already exists", {
             description: "This email is already registered and verified. Please sign in instead.",
-            variant: "destructive",
           });
         } else {
-          toast({
-            title: error.response?.data?.message || "An error occurred",
-            variant: "destructive",
-          });
+          toast.error(error.response?.data?.message || "An error occurred");
         }
       } else {
-        toast({ title: "An unexpected error occurred", variant: "destructive" });
+        toast.error("An unexpected error occurred");
       }
     } finally {
       setIsLoading(false);

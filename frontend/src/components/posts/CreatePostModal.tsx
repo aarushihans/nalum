@@ -8,8 +8,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { X, Image } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api";
 import MentionTextarea from "@/components/MentionTextarea";
 import { useProfile } from "@/context/ProfileContext";
+import UserAvatar from "@/components/UserAvatar";
 
 interface CreatePostModalProps {
   open: boolean;

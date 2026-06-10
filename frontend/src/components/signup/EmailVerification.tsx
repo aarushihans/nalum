@@ -4,7 +4,7 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface EmailVerificationProps {
   email: string;
@@ -24,7 +24,6 @@ interface EmailVerificationProps {
 }
 
 const EmailVerification = ({ email, onEmailChange, onVerified }: EmailVerificationProps) => {
-  const { toast } = useToast();
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [isVerificationDisabled, setIsVerificationDisabled] = useState(false);
@@ -32,7 +31,7 @@ const EmailVerification = ({ email, onEmailChange, onVerified }: EmailVerificati
   const [timer, setTimer] = useState(0);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (isVerificationDisabled && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => {
@@ -53,28 +52,25 @@ const EmailVerification = ({ email, onEmailChange, onVerified }: EmailVerificati
   const sendOtp = async () => {
     try {
       if (!email) {
-        toast({ title: "Please enter your email", variant: "destructive" });
+        toast.error("Please enter your email");
         return;
       }
-      
+
       setIsSendingOtp(true);
       await api.post('/auth/send-otp', { email });
-      toast({ 
-        title: "OTP sent successfully!", 
-        description: "Please check your email inbox (and spam folder)"
+      toast.success("OTP sent successfully!", {
+        description: "Please check your email inbox (and spam folder)",
       });
       setIsOtpSent(true);
       setIsVerificationDisabled(true);
       setTimer(60); // 1 minute = 60 seconds
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast({ 
-          title: error.response?.data?.message || "Failed to send OTP", 
+        toast.error(error.response?.data?.message || "Failed to send OTP", {
           description: "Please try again or contact support if the issue persists",
-          variant: "destructive" 
         });
       } else {
-        toast({ title: "An error occurred", variant: "destructive" });
+        toast.error("An error occurred");
       }
     } finally {
       setIsSendingOtp(false);
@@ -85,17 +81,17 @@ const EmailVerification = ({ email, onEmailChange, onVerified }: EmailVerificati
     try {
       const response = await api.post('/auth/verify-account-otp', { email, otp });
       if (!response.data.err) {
-        toast({ title: "Email verified successfully!" });
+        toast.success("Email verified successfully!");
         // Pass auth data to parent if the backend returned tokens (auto-login)
         onVerified(response.data.data);
       } else {
-        toast({ title: response.data.message || "Invalid OTP", variant: "destructive" });
+        toast.error(response.data.message || "Invalid OTP");
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast({ title: error.response?.data?.message || "An error occurred", variant: "destructive" });
+        toast.error(error.response?.data?.message || "An error occurred");
       } else {
-        toast({ title: "An error occurred", variant: "destructive" });
+        toast.error("An error occurred");
       }
     }
   };

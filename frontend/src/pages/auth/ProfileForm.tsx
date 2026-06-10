@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
-import MapLocationPicker, { type LocationData } from "@/components/signup/MapLocationPicker";
+import LocationSelector from "@/components/profile/LocationSelector";
 import { BRANCHES, CAMPUSES } from "@/constants/branches";
+import BatchYearSelect from "@/components/BatchYearSelect";
 import { POPULAR_COMPANIES, POPULAR_ROLES } from "@/lib/suggestions";
 import {
   GraduationCap,
@@ -46,7 +47,6 @@ interface SocialLinks {
 
 const ProfileForm = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { accessToken, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -78,13 +78,11 @@ const ProfileForm = () => {
     personal_website: "",
   });
 
-  // Form state - Location
-  const [locationData, setLocationData] = useState<LocationData>({
-    locality: "",
-    city: "",
-    state: "",
-    country: "",
-  });
+  // Form state - Location (alumni only)
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [lat, setLat] = useState<number | undefined>();
+  const [lng, setLng] = useState<number | undefined>();
 
   // Form state - Additional Info
   const [skills, setSkills] = useState<string[]>([]);
@@ -92,11 +90,16 @@ const ProfileForm = () => {
   const [experience, setExperience] = useState<Experience[]>([]);
 
   useEffect(() => {
+    if (user?.role === 'admin') {
+      navigate('/admin-panel/dashboard', { replace: true });
+      return;
+    }
+
     const checkProfileStatus = async () => {
       try {
         const { data } = await api.get("/profile/status");
         if (data.profileCompleted) {
-          toast({ title: "You have already completed your profile." });
+          toast.success("You have already completed your profile.");
           navigate("/dashboard");
         }
       } catch (error) {
@@ -118,7 +121,7 @@ const ProfileForm = () => {
 
     checkProfileStatus();
     getUserName();
-  }, [navigate, toast, accessToken]);
+  }, [navigate, accessToken, user]);
 
   const addSkill = () => {
     if (newSkill.trim() && skills.length < 10) {
@@ -183,17 +186,11 @@ const ProfileForm = () => {
 
   const nextStep = () => {
     if (currentStep === 2 && (!branch || !campus || !batch)) {
-      toast({
-        title: "Please fill all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill all required fields");
       return;
     }
-    if (currentStep === 4 && (!locationData.city || !locationData.country)) {
-      toast({
-        title: "Please provide your City and Country",
-        variant: "destructive",
-      });
+    if (currentStep === 4 && isAlumni && (!city || !country)) {
+      toast.error("Please provide your City and Country");
       return;
     }
     setCurrentStep(currentStep + 1);
@@ -206,11 +203,8 @@ const ProfileForm = () => {
   const totalSteps = wantsAdditionalInfo ? 5 : 4;
 
   const handleSubmit = async () => {
-    if (!locationData.city || !locationData.country) {
-      toast({
-        title: "Please provide your City and Country",
-        variant: "destructive",
-      });
+    if (isAlumni && (!city || !country)) {
+      toast.error("Please provide your City and Country");
       return;
     }
 
@@ -227,15 +221,8 @@ const ProfileForm = () => {
     if (profilePicture) formData.append("profile_picture", profilePicture);
 
     formData.append("social_media", JSON.stringify(socialLinks));
-    if (locationData.city && locationData.country) {
-      formData.append("location", JSON.stringify({
-        locality: locationData.locality,
-        city: locationData.city,
-        state: locationData.state,
-        country: locationData.country,
-        lat: locationData.lat,
-        lng: locationData.lng,
-      }));
+    if (city && country) {
+      formData.append("location", JSON.stringify({ city, country, lat, lng }));
     }
     if (skills.length > 0) formData.append("skills", JSON.stringify(skills));
     if (experience.length > 0)
@@ -247,10 +234,10 @@ const ProfileForm = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      toast({ title: "Profile created successfully! 🎉" });
+      toast.success("Profile created successfully! 🎉");
       navigate("/dashboard");
     } catch (error) {
-      toast({ title: "Error creating profile.", variant: "destructive" });
+      toast.error("Error creating profile.");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -342,27 +329,11 @@ const ProfileForm = () => {
               <Label htmlFor="batch" className="text-base text-gray-900">
                 Year of Graduation <span className="text-red-500">*</span>
               </Label>
-              <Select value={batch} onValueChange={setBatch}>
-                <SelectTrigger className="h-12 text-base">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 50 }, (_, i) => {
-                    const year = 2030 - i;
-                    const currentYear = new Date().getFullYear();
-                    // Students can only pick current year or future years
-                    // Alumni can pick any year
-                    if (!isAlumni && year < currentYear) {
-                      return null;
-                    }
-                    return (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+              <BatchYearSelect
+                value={batch}
+                onValueChange={setBatch}
+                mode={isAlumni ? "alumni" : "student"}
+              />
             </div>
 
             {isAlumni && (
@@ -567,20 +538,29 @@ const ProfileForm = () => {
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  Your Location
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Help fellow alumni find you on our network map
-                </p>
+            {isAlumni && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    Your Location
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Help fellow alumni find you on our network map
+                  </p>
+                </div>
+                <LocationSelector
+                  city={city}
+                  country={country}
+                  onLocationChange={(newCity, newCountry, newLat, newLng) => {
+                    setCity(newCity);
+                    setCountry(newCountry);
+                    setLat(newLat);
+                    setLng(newLng);
+                  }}
+                  variant="light"
+                />
               </div>
-              <MapLocationPicker
-                value={locationData}
-                onChange={setLocationData}
-              />
-            </div>
+            )}
 
             <div className="flex items-start space-x-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <Checkbox
@@ -603,16 +583,6 @@ const ProfileForm = () => {
                 </p>
               </div>
             </div>
-
-            {!wantsAdditionalInfo && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <p className="text-base text-gray-700">
-                  <strong>Note:</strong> You can skip this and complete your
-                  profile now. You will be able to add more information later
-                  from your dashboard.
-                </p>
-              </div>
-            )}
           </div>
         );
 

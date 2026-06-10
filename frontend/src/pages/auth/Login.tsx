@@ -16,6 +16,7 @@ import nsutLogo from "@/assets/nsut-logo.svg";
 import nsutCampusHero from "@/assets/hero.webp";
 import apiClient from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { resolvePostLoginPath } from "@/lib/roleConfig";
 import axios from "axios";
 import { trackLogin, trackEvent } from "@/lib/analytics";
 
@@ -28,33 +29,16 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { setAuth, accessToken } = useAuth();
+  const { setAuth, accessToken, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
-    const checkProfileAndRedirect = async () => {
-      if (accessToken) {
-        try {
-          const profileStatusResponse = await apiClient.get("/profile/status", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-
-          if (!profileStatusResponse.data.profileCompleted) {
-            navigate('/profile-form', { replace: true });
-          } else {
-            navigate('/dashboard', { replace: true });
-          }
-        } catch (error) {
-          console.error("Error checking profile status:", error);
-          // If there's an error checking profile, just go to dashboard
-          navigate('/dashboard', { replace: true });
-        }
-      }
-    };
-
-    checkProfileAndRedirect();
-  }, [accessToken, navigate]);
+    if (!accessToken || !user) return;
+    resolvePostLoginPath(user.role, accessToken).then(path =>
+      navigate(path, { replace: true })
+    );
+  }, [accessToken, user]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -104,22 +88,8 @@ const Login = () => {
         },
       });
 
-      // Redirect admin users to admin panel
-      if (user?.role === 'admin') {
-        navigate("/admin-panel/dashboard");
-        return;
-      }
-
-      // Regular user flow - check profile completion
-      const profileStatusResponse = await apiClient.get("/profile/status", {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
-
-      if (!profileStatusResponse.data.profileCompleted) {
-        navigate("/profile-form");
-      } else {
-        navigate("/dashboard");
-      }
+      const path = await resolvePostLoginPath(user.role, access_token);
+      navigate(path);
     } catch (error) {
       console.error("Login error:", error);
       trackEvent('login_error', {
@@ -166,6 +136,18 @@ const Login = () => {
             description: "text-base text-white",
           },
         });
+      } else if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 403 &&
+        error.response?.data?.verification_expired
+      ) {
+        toast.error("Verification Expired", {
+          description: "Your NSUT email verification has expired. Please re-verify your email.",
+          duration: 6000,
+          style: { background: "#800000", color: "white", border: "2px solid #FFD700", fontSize: "16px" },
+          classNames: { title: "text-xl font-bold text-white", description: "text-base text-white" },
+        });
+        navigate("/otp-verification", { state: { email: formData.email } });
       } else if (
         axios.isAxiosError(error) &&
         error.response?.status === 401 &&

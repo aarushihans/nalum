@@ -32,7 +32,7 @@ const DashboardContent = () => {
   const [searchResults, setSearchResults] = useState<{ users: any[], posts: any[] }>({ users: [], posts: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [searchTab, setSearchTab] = useState<'people' | 'posts'>('people');
-  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentQueryRef = useRef("");
   const inputRef = useRef<HTMLInputElement>(null);
 

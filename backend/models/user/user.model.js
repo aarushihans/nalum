@@ -63,35 +63,6 @@ const userSchema = new mongoose.Schema(
         return this.role === "alumni" ? false : true;
       },
     },
-    // Location collected at sign-up
-    location: {
-      locality: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
-      city: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
-      state: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
-      country: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
-      lat: {
-        type: Number,
-      },
-      lng: {
-        type: Number,
-      },
-    },
     banned: {
       type: Boolean,
       default: false,
@@ -108,7 +79,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Method to check if student email verification has expired (30 days)
+// Method to check if student email verification has expired (180 days)
 userSchema.methods.isStudentVerificationExpired = function () {
   if (this.role !== "student") return false;
   if (!this.email_verified || !this.email_verified_at) return true;

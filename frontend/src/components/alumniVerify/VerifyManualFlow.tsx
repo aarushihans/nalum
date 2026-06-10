@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   getUserProfile,
@@ -32,7 +32,6 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
     branch: "",
   });
   const [matches, setMatches] = useState<Match[]>([]);
-  const { toast } = useToast();
   const { setAuth, accessToken, user } = useAuth();
 
   // Fetch user profile data on component mount
@@ -69,11 +68,9 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
 
       if (matchesData.length === 0) {
         // No matches found - added to admin queue
-        toast({
-          title: "No Matches Found",
+        toast("No Matches Found", {
           description:
             "Your verification request has been sent to the admin for manual review. You will be notified once it's processed.",
-          variant: "default",
         });
         if (onClose) onClose();
       } else if (matchesData.length === 1) {
@@ -86,19 +83,12 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast({
-          title: "Verification Failed",
+        toast.error("Verification Failed", {
           description:
-            error.response?.data?.message ||
-            "Failed to check verification details",
-          variant: "destructive",
+            error.response?.data?.message || "Failed to check verification details",
         });
       } else {
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred",
-          variant: "destructive",
-        });
+        toast.error("Error", { description: "An unexpected error occurred" });
       }
     } finally {
       setIsLoading(false);
@@ -116,8 +106,7 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
         setAuth(accessToken, { ...user, verified_alumni: true });
       }
 
-      toast({
-        title: "Verification Successful! 🎉",
+      toast.success("Verification Successful! 🎉", {
         description: "Your alumni status has been verified successfully.",
       });
 
@@ -125,18 +114,12 @@ const VerifyManualFlow = ({ onClose }: VerifyManualFlowProps) => {
       if (onClose) onClose();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast({
-          title: "Verification Failed",
+        toast.error("Verification Failed", {
           description:
             error.response?.data?.message || "Failed to confirm verification",
-          variant: "destructive",
         });
       } else {
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred",
-          variant: "destructive",
-        });
+        toast.error("Error", { description: "An unexpected error occurred" });
       }
     } finally {
       setIsLoading(false);

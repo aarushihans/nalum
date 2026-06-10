@@ -17,17 +17,13 @@ router.post("/", async (req, res) => {
   if (!user.data) {
     return res.status(404).json({ error: true, code: 404, message: "User not found" });
   }
-  if (user.data.email_verified) {
-    return res.status(400).json({ error: true, code: 400, message: "Account already verified" });
-  }
-
   const otpData = await otpController.find(email, otp);
   if (otpData.error) {
     return res.status(400).json({ error: true, code: 400, message: otpData.message || "Invalid OTP" });
   }
 
-  // Mark user as verified with timestamp
-  const updateResponse = await userController.update(email, { 
+  // Mark user as verified with timestamp (also handles re-verification — resets the 180-day timer)
+  const updateResponse = await userController.update(email, {
     email_verified: true,
     email_verified_at: new Date()
   });

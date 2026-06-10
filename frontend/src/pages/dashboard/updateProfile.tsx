@@ -26,7 +26,7 @@ import { useProfile, Profile } from "@/context/ProfileContext";
 import api from "@/lib/api";
 import UserAvatar from "@/components/UserAvatar";
 import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
-import MapLocationPicker, { type LocationData } from "@/components/signup/MapLocationPicker";
+import LocationSelector from "@/components/profile/LocationSelector";
 import { toast } from "sonner";
 import {
   POPULAR_COMPANIES,
@@ -60,9 +60,7 @@ const UpdateProfile = () => {
     current_company: "",
     current_role: "",
     location: {
-      locality: "",
       city: "",
-      state: "",
       country: "",
       lat: undefined as number | undefined,
       lng: undefined as number | undefined,
@@ -139,9 +137,7 @@ const UpdateProfile = () => {
         current_company: contextProfile.current_company || "",
         current_role: contextProfile.current_role || "",
         location: {
-          locality: contextProfile.location?.locality || "",
           city: contextProfile.location?.city || "",
-          state: contextProfile.location?.state || "",
           country: contextProfile.location?.country || "",
           lat: contextProfile.location?.lat,
           lng: contextProfile.location?.lng,
@@ -380,9 +376,7 @@ const UpdateProfile = () => {
         current_company?: string;
         current_role?: string;
         location?: {
-          locality?: string;
           city?: string;
-          state?: string;
           country?: string;
           lat?: number;
           lng?: number;
@@ -667,39 +661,32 @@ const UpdateProfile = () => {
             </div>
 
             {/* Location */}
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6 overflow-visible">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Location
-              </h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Update your location to appear on the Alumni Network Map
-              </p>
-              <MapLocationPicker
-                variant="dark"
-                height="400px"
-                value={{
-                  locality: formData.location.locality,
-                  city: formData.location.city,
-                  state: formData.location.state,
-                  country: formData.location.country,
-                  lat: formData.location.lat,
-                  lng: formData.location.lng,
-                }}
-                onChange={(newLocation) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    location: {
-                      locality: newLocation.locality || "",
-                      city: newLocation.city,
-                      state: newLocation.state || "",
-                      country: newLocation.country,
-                      lat: newLocation.lat,
-                      lng: newLocation.lng,
-                    },
-                  }));
-                }}
-              />
-            </div>
+            {isAlumni && (
+              <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-6 overflow-visible">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Location
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Update your location to appear on the Alumni Network Map
+                </p>
+                <LocationSelector
+                  city={formData.location.city}
+                  country={formData.location.country}
+                  onLocationChange={(newCity, newCountry, newLat, newLng) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: {
+                        city: newCity,
+                        country: newCountry,
+                        lat: newLat,
+                        lng: newLng,
+                      },
+                    }));
+                  }}
+                  variant="dark"
+                />
+              </div>
+            )}
 
             {/* Current Position - Only visible for Alumni */}
             {isAlumni && (

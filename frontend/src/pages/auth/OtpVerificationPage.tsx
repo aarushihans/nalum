@@ -1,6 +1,7 @@
 import EmailVerification from "@/components/signup/EmailVerification";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
 import nsutLogo from "@/assets/nsut-logo.svg";
@@ -14,6 +15,13 @@ const OtpVerificationPage = () => {
   const [verified, setVerified] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { setAuth } = useAuth();
+
+  useEffect(() => {
+    if (!email) {
+      toast.error("Session expired. Please sign up again.");
+      navigate("/sign-up", { replace: true });
+    }
+  }, [email, navigate]);
 
   const handleEmailVerified = (authData?: {
     access_token: string;
@@ -31,12 +39,7 @@ const OtpVerificationPage = () => {
 
     if (authData) {
       // Auto-login: set auth context with the tokens from verification
-      setAuth(
-        authData.access_token,
-        authData.user.email,
-        authData.user.verified_alumni,
-        authData.user
-      );
+      setAuth(authData.access_token, authData.user);
 
       // Auto-redirect to profile form after a brief success message
       setIsRedirecting(true);

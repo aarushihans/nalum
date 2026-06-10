@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Conversation = require('../../models/chat/conversations.model');
 const Connection = require('../../models/chat/connections.model');
 const Message = require('../../models/chat/messages.model');
@@ -35,49 +36,71 @@ exports.getConversations = async (req, res) => {
       return acc;
     }, {});
 
-    // Get unread counts and compute otherParticipant with profile picture
-    const conversationsWithUnread = await Promise.all(
-      conversations.map(async (conv) => {
-        // Count unread messages directly from MongoDB for accuracy
-        const unreadCount = await Message.countDocuments({
-          conversation: conv._id,
-          sender: { $ne: userId },
-          'readBy.user': { $ne: userId },
-          deleted: { $ne: true } // Exclude deleted messages
-        });
+    // Batch unread counts for all conversations in one aggregate
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const unreadAgg = await Message.aggregate([
+      {
+        $match: {
+          conversation: { $in: conversations.map(c => c._id) },
+          sender: { $ne: userObjectId },
+          'readBy.user': { $ne: userObjectId },
+          deleted: { $ne: true }
+        }
+      },
+      { $group: { _id: '$conversation', count: { $sum: 1 } } }
+    ]);
+    const unreadMap = unreadAgg.reduce((acc, item) => {
+      acc[item._id.toString()] = item.count;
+      return acc;
+    }, {});
 
-        // Attach profile pictures to participants
-        const participantsWithPics = conv.participants.map(p => ({
-          ...p.toObject(),
-          profile_picture: profileMap[p._id.toString()]
-        }));
+    // Collect other participant IDs for a single batch connection lookup
+    const otherParticipantIds = conversations.map(conv =>
+      conv.participants.find(p => p._id.toString() !== userId.toString())?._id
+    ).filter(Boolean);
 
-        // Find the other participant (not the current user)
-        const otherParticipant = participantsWithPics.find(
-          p => p._id.toString() !== userId.toString()
-        );
+    const connectionDocs = await Connection.find({
+      $or: [
+        { requester: userId, recipient: { $in: otherParticipantIds } },
+        { requester: { $in: otherParticipantIds }, recipient: userId }
+      ]
+    });
+    const connectionMap = connectionDocs.reduce((acc, conn) => {
+      const otherId = conn.requester.toString() === userId.toString()
+        ? conn.recipient.toString()
+        : conn.requester.toString();
+      acc[otherId] = conn;
+      return acc;
+    }, {});
 
-        // Check for connection status
-        const connection = await Connection.findOne({
-          $or: [
-            { requester: userId, recipient: otherParticipant._id },
-            { requester: otherParticipant._id, recipient: userId }
-          ]
-        });
+    // Build response — synchronous now that all data is pre-fetched
+    const conversationsRaw = conversations.map(conv => {
+      const participantsWithPics = conv.participants.map(p => ({
+        ...p.toObject(),
+        profile_picture: profileMap[p._id.toString()]
+      }));
 
-        return {
-          ...conv.toObject(),
-          participants: participantsWithPics,
-          otherParticipant,
-          unreadCount,
-          unreadCount,
-          connectionStatus: connection ? connection.status : 'none',
-          connectionRequester: connection ? connection.requester : null,
-          connectionId: connection ? connection._id : null,
-          blockedBy: connection ? connection.blockedBy : null
-        };
-      })
-    );
+      const otherParticipant = participantsWithPics.find(
+        p => p._id.toString() !== userId.toString()
+      );
+
+      if (!otherParticipant) return null;
+
+      const unreadCount = unreadMap[conv._id.toString()] || 0;
+      const connection = connectionMap[otherParticipant._id.toString()] || null;
+
+      return {
+        ...conv.toObject(),
+        participants: participantsWithPics,
+        otherParticipant,
+        unreadCount,
+        connectionStatus: connection ? connection.status : 'none',
+        connectionRequester: connection ? connection.requester : null,
+        connectionId: connection ? connection._id : null,
+        blockedBy: connection ? connection.blockedBy : null
+      };
+    });
+    const conversationsWithUnread = conversationsRaw.filter(Boolean);
 
     const total = await Conversation.countDocuments({
       participants: userId,
@@ -158,7 +181,7 @@ exports.getConversation = async (req, res) => {
       conversation: {
         ...conversation.toObject(),
         participants: participantsWithPics,
-        otherParticipant, // Add this for easier frontend consumption
+        otherParticipant: otherParticipant || null,
         unreadCount: unreadCount,
         connectionStatus: connection ? connection.status : 'none',
         connectionRequester: connection ? connection.requester : null,
@@ -204,6 +227,7 @@ exports.createConversation = async (req, res) => {
     const participants = [userId, participantId].sort();
 
     // Check if conversation already exists
+    let isNewConversation = false;
     let conversation = await Conversation.findOne({
       participants: { $all: participants, $size: 2 }
     });
@@ -214,6 +238,7 @@ exports.createConversation = async (req, res) => {
         participants
       });
       await conversation.save();
+      isNewConversation = true;
     }
 
     // If conversation was "deleted" by this user, un-delete it (they are sending a new message or opening it)
@@ -244,9 +269,9 @@ exports.createConversation = async (req, res) => {
       p => p._id.toString() !== userId.toString()
     );
 
-    res.status(conversation.isNew ? 201 : 200).json({
+    res.status(isNewConversation ? 201 : 200).json({
       success: true,
-      message: conversation.isNew ? 'Conversation created' : 'Conversation exists',
+      message: isNewConversation ? 'Conversation created' : 'Conversation exists',
       data: {
         ...conversation.toObject(),
         participants: participantsWithPics,

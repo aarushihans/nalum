@@ -38,7 +38,7 @@ const VerificationQueue = () => {
 
   const fetchQueue = async () => {
     try {
-      const response = await adminApi.get("/admin/verification/queue");
+      const response = await adminApi.get<{ data: VerificationQueueItem[] }>("/admin/verification/queue");
       setQueue(response.data.data || []);
     } catch (err) {
       console.error("Failed to fetch queue:", err);
@@ -87,6 +87,7 @@ const VerificationQueue = () => {
       );
       toast.success("Verification rejected");
       setShowRejectModal(false);
+      setRejectReason("");
       fetchQueue();
     } catch (err) {
       console.error("Failed to reject:", err);
@@ -246,7 +247,8 @@ const VerificationQueue = () => {
                 </button>
                 <button
                   onClick={handleRejectSubmit}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  disabled={!rejectReason.trim() || !!actionLoading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   Reject
                 </button>

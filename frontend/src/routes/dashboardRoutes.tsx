@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ProtectedVerificationRoute from "@/components/ProtectedVerificationRoute";
 import { ChatProvider } from "@/context/ChatContext";
+import { ProfileProvider } from "@/context/ProfileContext";
 
 // Lazy loaded dashboard components
 const DashboardLayout = lazy(() => import("@/pages/dashboard/DashboardLayout"));
@@ -31,7 +32,9 @@ export function DashboardRoutes() {
         path="/dashboard/verify-alumni"
         element={
           <ProtectedRoute>
-            <VerifyAlumni />
+            <ProfileProvider>
+              <VerifyAlumni />
+            </ProfileProvider>
           </ProtectedRoute>
         }
       />

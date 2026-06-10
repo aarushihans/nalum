@@ -37,12 +37,6 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({
-    toast: vi.fn(),
-  }),
-}));
-
 vi.mock("react-router-dom", async () => {
   const actual =
     await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
@@ -78,6 +72,7 @@ beforeEach(() => {
     isAdmin: false,
     setAuth: setAuthMock,
     logout: vi.fn(),
+    refreshUser: vi.fn(),
   });
 });
 

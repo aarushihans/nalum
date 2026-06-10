@@ -61,15 +61,22 @@ router.post(
         }
       }
 
-      // If no location provided during profile creation, fall back to User's sign-up location
-      if (!location || Object.keys(location).length === 0) {
-        const userDoc = await User.findById(userId).select("location");
-        if (userDoc && userDoc.location && userDoc.location.city) {
-          location = userDoc.location;
-        }
+      const { batch, branch, campus, current_company, current_role } = req.body;
+
+      // Only alumni can set location
+      const user = await User.findById(userId).select("role");
+      if (!user || user.role !== "alumni") {
+        location = {};
       }
 
-      const { batch, branch, campus, current_company, current_role } = req.body;
+      // Alumni must provide city and country
+      if (user && user.role === "alumni") {
+        if (!location || !location.city || !location.country) {
+          return res
+            .status(400)
+            .json({ error: "Alumni must provide their City and Country." });
+        }
+      }
 
       // Validate required fields
       if (!batch || !branch || !campus) {
@@ -77,15 +84,6 @@ router.post(
           .status(400)
           .json({
             error: "Missing required fields: batch, branch, or campus.",
-          });
-      }
-
-      // Validate location
-      if (!location || !location.city || !location.country) {
-        return res
-          .status(400)
-          .json({
-            error: "Location (City and Country) is required.",
           });
       }
 

@@ -23,7 +23,7 @@ export const MessageInput = ({
   const [message, setMessage] = useState("");
   const { socket } = useChatContext();
   const { emitTyping } = useTypingIndicator(socket, conversationId);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleInputChange = (value: string) => {
     setMessage(value);

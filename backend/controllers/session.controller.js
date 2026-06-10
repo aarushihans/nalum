@@ -38,7 +38,6 @@ exports.getOrCreate = async (email, user_id) => {
 		return { error: true, message: "Credentials are required" };
 	}
 	try {
-        const refresh_token = crypto.randomBytes(40).toString('hex');
 		const lower = email.toLowerCase();
 		const existing = await Session.findOne({ email: lower });
 
@@ -53,6 +52,7 @@ exports.getOrCreate = async (email, user_id) => {
 		}
 
 		// no existing session; create a fresh one
+        const refresh_token = crypto.randomBytes(40).toString('hex');
 		const session = new Session({
 			email: lower,
 			user_id,

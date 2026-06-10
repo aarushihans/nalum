@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import { getPendingEvents, approveEvent, rejectEvent, Event } from "../../lib/adminApi";
-import { CheckCircle, XCircle, Calendar as CalendarIcon, Toggle, Plus, RefreshCw, MapPin, Users, Link as LinkIcon, Mail, Phone, Globe } from "lucide-react";
+import { CheckCircle, XCircle, Calendar as CalendarIcon, Plus, RefreshCw, MapPin, Users, Link as LinkIcon, Mail, Phone, Globe } from "lucide-react";
 import api from "../../lib/api";
 import { BASE_URL } from "../../lib/constants";
 

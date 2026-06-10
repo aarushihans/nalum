@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { verifyAlumniCode } from "@/lib/api";
 import VerifyManualFlow from "./VerifyManualFlow";
@@ -25,7 +25,6 @@ const VerifyCodeModal = ({ isOpen, onClose }: VerifyCodeModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [view, setView] = useState<"code" | "manual">("code");
-  const { toast } = useToast();
   const { setAuth, accessToken } = useAuth();
 
   const handleClose = () => {
@@ -51,8 +50,7 @@ const VerifyCodeModal = ({ isOpen, onClose }: VerifyCodeModalProps) => {
         // Update auth context with verified status
         setAuth(accessToken, response.data.data.user);
 
-        toast({
-          title: "Verification Successful! 🎉",
+        toast.success("Verification Successful! 🎉", {
           description: "Your alumni status has been verified successfully.",
         });
 
@@ -65,17 +63,11 @@ const VerifyCodeModal = ({ isOpen, onClose }: VerifyCodeModalProps) => {
         const errorMessage =
           error.response?.data?.message || "Failed to verify code";
         setError(errorMessage);
-        toast({
-          title: "Verification Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        toast.error("Verification Failed", { description: errorMessage });
       } else {
         setError("An unexpected error occurred");
-        toast({
-          title: "Verification Failed",
+        toast.error("Verification Failed", {
           description: "An unexpected error occurred",
-          variant: "destructive",
         });
       }
     } finally {

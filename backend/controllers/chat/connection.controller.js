@@ -40,15 +40,14 @@ exports.sendConnectionRequest = async (req, res) => {
           status: connection.status,
         });
       }
-      // If pending/rejected/cancelled, retry/update
-      // We will reuse this connection object and proceed
-      connection.status = "pending"; // Reset status to pending
-      connection.requester = requesterId; // Ensure requester is correct (if swapping roles)
+      // Reuse the existing document — always save so the status reset reaches the DB
+      connection.status = "pending";
+      connection.requester = requesterId;
       connection.recipient = recipientId;
       if (requestMessage) {
         connection.requestMessage = requestMessage;
-        await connection.save();
       }
+      await connection.save();
     } else {
       // Create connection request
       connection = new Connection({

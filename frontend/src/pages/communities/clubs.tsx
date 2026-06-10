@@ -234,7 +234,8 @@ const societies: Society[] = [
     category: "technical",
     image: "/Communities/Clubs/NAKSHATRA.jpg"
   }
-].sort((a, b) => a.name.localeCompare(b.name));
+];
+societies.sort((a, b) => a.name.localeCompare(b.name));
 
 const categories = [
   { value: 'all', label: 'All Societies', color: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },

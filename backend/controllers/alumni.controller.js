@@ -16,10 +16,16 @@ exports.getVerificationStatus = async (req, res) => {
       });
     }
     
+    // Check queue for pending or rejected entry
+    const queueEntry = await VerificationQueue.findOne({ user: user_id });
+
     // Return the verification status
     return res.status(200).json({
       success: true,
       verified_alumni: user.verified_alumni,
+      pending_verification: queueEntry?.status === "pending",
+      rejected_verification: queueEntry?.status === "rejected",
+      rejection_reason: queueEntry?.rejection_reason || null,
     });
   } catch (error) {
     console.error("Error fetching verification status:", error);
@@ -163,14 +169,16 @@ exports.checkManualVerification = async (req, res) => {
     // Manual review goes directly to admin verification queue
     // No database checking - admin will manually verify
     
+    // Clear any previous rejected entry before checking for pending
+    await VerificationQueue.deleteOne({ user: user_id, status: "rejected" });
+
     // Check if user already has a pending request
-    const existingRequest = await VerificationQueue.findOne({ user: user_id });
-    
+    const existingRequest = await VerificationQueue.findOne({ user: user_id, status: "pending" });
+
     if (existingRequest) {
-      return res.status(200).json({
-        success: true,
+      return res.status(400).json({
+        success: false,
         message: "You already have a pending verification request",
-        matches: [],
       });
     }
 

@@ -27,17 +27,7 @@ const profileSchema = new mongoose.Schema(
 
 
     location: {
-      locality: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
       city: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
-      state: {
         type: String,
         lowercase: true,
         trim: true,
@@ -49,7 +39,7 @@ const profileSchema = new mongoose.Schema(
       },
       lat: {
         type: Number,
-        index: true, // Enable geospatial queries if needed later
+        index: true,
       },
       lng: {
         type: Number,

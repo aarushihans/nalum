@@ -11,7 +11,7 @@ exports.getVerificationQueue = async (req, res) => {
     
     const { page = 1, limit = 10, status = "pending" } = req.query;
 
-    const queue = await VerificationQueue.find()
+    const queue = await VerificationQueue.find({ status: "pending" })
       .populate("user", "name email role createdAt")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -20,7 +20,7 @@ exports.getVerificationQueue = async (req, res) => {
     console.log("[VerificationController] Found queue items:", queue.length);
     console.log("[VerificationController] Queue data:", JSON.stringify(queue, null, 2));
 
-    const total = await VerificationQueue.countDocuments();
+    const total = await VerificationQueue.countDocuments({ status: "pending" });
     console.log("[VerificationController] Total queue items:", total);
 
     res.status(200).json({
@@ -137,8 +137,10 @@ exports.rejectVerification = async (req, res) => {
       });
     }
 
-    // Remove from queue
-    await VerificationQueue.findByIdAndDelete(verificationRequest._id);
+    // Mark as rejected (keep entry so user can see the reason)
+    verificationRequest.status = "rejected";
+    verificationRequest.rejection_reason = reason;
+    await verificationRequest.save();
 
     // Log activity
     await logAdminActivity(
@@ -172,7 +174,7 @@ exports.rejectVerification = async (req, res) => {
 // Get verification statistics
 exports.getVerificationStats = async (req, res) => {
   try {
-    const totalPending = await VerificationQueue.countDocuments();
+    const totalPending = await VerificationQueue.countDocuments({ status: "pending" });
     const totalVerified = await User.countDocuments({ verified_alumni: true });
     const totalUnverified = await User.countDocuments({
       role: "alumni",

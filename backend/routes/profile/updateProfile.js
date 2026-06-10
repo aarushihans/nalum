@@ -17,6 +17,7 @@ router.put("/", protect, async (req, res) => {
     }
 
     const {
+      name,
       batch,
       branch,
       campus,
@@ -56,6 +57,11 @@ router.put("/", protect, async (req, res) => {
         .json({ error: "Profile not found. Please create a profile first." });
     }
 
+    // Update User name if provided
+    if (name !== undefined && name.trim()) {
+      await User.findByIdAndUpdate(userId, { name: name.trim() });
+    }
+
     // Update fields
     if (batch !== undefined) profile.batch = batch;
     if (branch !== undefined) profile.branch = branch;
@@ -66,7 +72,10 @@ router.put("/", protect, async (req, res) => {
     if (skills !== undefined) profile.skills = skills;
     if (experience !== undefined) profile.experience = experience;
     if (location !== undefined) {
-      profile.location = location;
+      const user = await User.findById(userId).select("role");
+      if (user && user.role === "alumni") {
+        profile.location = location;
+      }
     }
 
     await profile.save();

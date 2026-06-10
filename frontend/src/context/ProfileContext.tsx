@@ -45,15 +45,13 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async () => {
-    if (!accessToken) {
-      setIsLoading(false);
-      return;
-    }
+    if (!accessToken) { setIsLoading(false); return; }
+    if (user?.role === 'admin') { setIsLoading(false); return; }
 
     try {
       setIsLoading(true);
@@ -70,7 +68,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchProfile();
-  }, [accessToken]);
+  }, [accessToken, user]);
 
   const refetchProfile = async () => {
     await fetchProfile();

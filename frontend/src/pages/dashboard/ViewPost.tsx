@@ -116,7 +116,7 @@ const ViewPost = () => {
     }
   };
 
-  const isOwner = post?.userId._id === user?.user_id;
+  const isOwner = post?.userId._id === user?.id;
 
   if (isLoading) {
     return (

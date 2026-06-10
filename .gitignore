@@ -134,6 +134,7 @@ dist
 
 # env files
 .env
+.env.copy
 
 # Mac FIles
 .DS_store

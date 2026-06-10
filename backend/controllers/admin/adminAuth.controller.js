@@ -74,7 +74,7 @@ exports.login = async (req, res) => {
     const { refresh_token, ...rest } = sessionData.data;
     res.cookie("refresh_token", refresh_token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite:"lax",
       path: "/",
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
@@ -115,14 +115,14 @@ exports.logout = async (req, res) => {
 
     res.clearCookie("refresh_token", {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite:"lax",
       path: "/",
     });
 
     res.clearCookie("access_token", {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite:"lax",
       path: "/",
     });

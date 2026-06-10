@@ -1,5 +1,6 @@
 import { lazy } from "react";
 import { Route } from "react-router-dom";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Lazy loaded auth pages
 const Login = lazy(() => import("@/pages/auth/Login"));
@@ -15,7 +16,7 @@ export function AuthRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/otp-verification" element={<OtpVerificationPage />} />
-      <Route path="/profile-form" element={<ProfileForm />} />
+      <Route path="/profile-form" element={<ProtectedRoute><ProfileForm /></ProtectedRoute>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
     </>

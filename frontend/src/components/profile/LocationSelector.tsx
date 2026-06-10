@@ -9,10 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, AlertCircle } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { COUNTRIES } from "@/constants/countries";
 import { toast } from "sonner";
-import api from "@/lib/api";
 import { validateTextInput } from "@/lib/validation";
 
 interface LocationSelectorProps {
@@ -36,19 +35,11 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   const [cityInput, setCityInput] = useState(city || "");
   const [countryInput, setCountryInput] = useState(country || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [useManualEntry, setUseManualEntry] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const handleUseMyLocation = async () => {
     setIsLoading(true);
     if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser", {
-        duration: 4000,
-        action: {
-          label: "Type Manually",
-          onClick: () => setUseManualEntry(true),
-        },
-      });
+      toast.error("Geolocation is not supported by your browser");
       setIsLoading(false);
       return;
     }
@@ -78,36 +69,25 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           );
         } catch (error) {
           console.error("Error fetching location:", error);
-          toast.error("Failed to detect location", {
-            duration: 4000,
-            action: {
-              label: "Type Manually",
-              onClick: () => setUseManualEntry(true),
-            },
-          });
+          toast.error("Failed to detect location. Please type manually.");
         }
         setIsLoading(false);
       },
       (error) => {
         console.error("Geolocation error:", error);
-        toast.error("Location permission denied", {
-          duration: 5000,
-          action: {
-            label: "Allow Again",
-            onClick: () => handleUseMyLocation(),
-          },
-          description: "or type manually below",
-        });
-        setUseManualEntry(true);
+        toast.error("Location permission denied. Please type your location manually.");
         setIsLoading(false);
       },
     );
   };
 
-  const handleManualUpdate = async () => {
-    if (cityInput && countryInput) {
-      const cityValidation = validateTextInput(cityInput);
-      const countryValidation = validateTextInput(countryInput);
+  const handleManualUpdate = async (overrideCity?: string, overrideCountry?: string) => {
+    const effectiveCity = overrideCity !== undefined ? overrideCity : cityInput;
+    const effectiveCountry = overrideCountry !== undefined ? overrideCountry : countryInput;
+
+    if (effectiveCity && effectiveCountry) {
+      const cityValidation = validateTextInput(effectiveCity);
+      const countryValidation = validateTextInput(effectiveCountry);
 
       if (!cityValidation.isValid) {
         toast.error(cityValidation.message);
@@ -119,9 +99,8 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
         return;
       }
 
-      // Try to geocode the manually entered location
       try {
-        const query = `${cityInput}, ${countryInput}`;
+        const query = `${effectiveCity}, ${effectiveCountry}`;
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
           { headers: { "User-Agent": "NSUT-Alumni-Network/1.0" } },
@@ -131,27 +110,22 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           const lat = parseFloat(data[0].lat);
           const lng = parseFloat(data[0].lon);
           onLocationChange(
-            cityInput.toLowerCase(),
-            countryInput.toLowerCase(),
+            effectiveCity.toLowerCase(),
+            effectiveCountry.toLowerCase(),
             lat,
             lng,
           );
         } else {
-          onLocationChange(cityInput.toLowerCase(), countryInput.toLowerCase());
+          onLocationChange(effectiveCity.toLowerCase(), effectiveCountry.toLowerCase());
         }
       } catch (error) {
         console.error("Failed to geocode:", error);
-        onLocationChange(cityInput.toLowerCase(), countryInput.toLowerCase());
+        onLocationChange(effectiveCity.toLowerCase(), effectiveCountry.toLowerCase());
       }
     }
   };
 
-  const filteredCountries = COUNTRIES.filter((c) =>
-    c.includes(searchQuery.toLowerCase()),
-  );
-  const sortedCountries = searchQuery
-    ? filteredCountries
-    : ["india", ...COUNTRIES.filter((c) => c !== "india")];
+  const sortedCountries = ["india", ...COUNTRIES.filter((c) => c !== "india")];
 
   return (
     <div className="space-y-4">
@@ -160,13 +134,13 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           htmlFor="city"
           className={variant === "light" ? "text-gray-700" : "text-gray-300"}
         >
-          City
+          City <span className="text-red-500">*</span>
         </Label>
         <Input
           id="city"
           value={cityInput}
           onChange={(e) => setCityInput(e.target.value)}
-          onBlur={handleManualUpdate}
+          onBlur={(e) => handleManualUpdate(e.target.value, undefined)}
           placeholder="Enter your city"
           className={
             variant === "light"
@@ -181,13 +155,13 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           htmlFor="country"
           className={variant === "light" ? "text-gray-700" : "text-gray-300"}
         >
-          Country
+          Country <span className="text-red-500">*</span>
         </Label>
         <Select
           value={countryInput}
           onValueChange={(val) => {
             setCountryInput(val);
-            handleManualUpdate();
+            handleManualUpdate(undefined, val);
           }}
         >
           <SelectTrigger

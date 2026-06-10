@@ -34,6 +34,7 @@ interface AuthContextType {
   ) => void;
 
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,6 +100,20 @@ export const AuthProvider = ({
 
     restoreSession();
   }, []);
+  const refreshUser = async () => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/auth/refresh`,
+        {},
+        { withCredentials: true }
+      );
+      const { access_token, user } = response.data.data;
+      setAuth(access_token, user);
+    } catch (err) {
+      console.error('Failed to refresh user session', err);
+    }
+  };
+
   const logout = async () => {
     try {
       await axios.post(
@@ -124,6 +139,7 @@ export const AuthProvider = ({
         isAdmin,
         setAuth,
         logout,
+        refreshUser,
       }}
     >
       {/* Block children from rendering while checking the session */}

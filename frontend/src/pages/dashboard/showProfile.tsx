@@ -42,6 +42,10 @@ interface Profile {
     twitter?: string;
     personal_website?: string;
   };
+  location?: {
+    city?: string;
+    country?: string;
+  };
   skills?: string[];
   experience?: Array<{
     company: string;

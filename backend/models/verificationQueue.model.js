@@ -36,6 +36,14 @@ const VerificationQueueSchema = new Schema(
         type: String,
       },
     },
+    status: {
+      type: String,
+      enum: ["pending", "rejected"],
+      default: "pending",
+    },
+    rejection_reason: {
+      type: String,
+    },
   },
   {
     timestamps: true,

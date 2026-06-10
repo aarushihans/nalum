@@ -2,17 +2,16 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 /**
- * Simplified AdminProtectedRoute
- * - Uses main AuthContext instead of separate AdminAuthContext
- * - Checks if user is authenticated AND has admin role
- * - Redirects non-admins to main dashboard
- * - Redirects unauthenticated users to login
+ * AdminProtectedRoute — guards all /admin-panel/* routes.
+ * - Waits for AuthContext session restore before making any redirect decision
+ * - Checks isAuthenticated + role === 'admin'
+ * - Non-admins redirect to /dashboard; unauthenticated redirect to /login
  */
 const AdminProtectedRoute = () => {
-  const { isAuthenticated, isRestoringSession, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   // Show loading spinner while restoring session
-  if (isRestoringSession) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">

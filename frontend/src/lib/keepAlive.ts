@@ -2,7 +2,7 @@ import { BASE_URL } from "./constants";
 
 const KEEP_ALIVE_INTERVAL = 2 * 60 * 1000; // 2 minutes
 
-let keepAliveInterval: NodeJS.Timeout | null = null;
+let keepAliveInterval: ReturnType<typeof setInterval> | null = null;
 
 const pingBackend = async () => {
   try {

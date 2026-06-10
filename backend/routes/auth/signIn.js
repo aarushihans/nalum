@@ -54,7 +54,7 @@ router.post("/", async (req, res) => {
     });
   }
   
-  // Check student verification timeout (30 days)
+  // Check student email verification timeout (180 days)
   if (data.data.role === "student" && data.data.isStudentVerificationExpired()) {
     return res.status(403).json({
       err: true,
@@ -76,7 +76,7 @@ router.post("/", async (req, res) => {
     return res.status(401).json({
       err: true,
       code: 401,
-      user: "Unauthorized: Incorrect Password",
+      message: "Incorrect password. Please try again.",
     });
   }
 
@@ -91,7 +91,7 @@ router.post("/", async (req, res) => {
   // Set refresh token in httpOnly cookie
   res.cookie("refresh_token", refresh_token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: "lax",
     path: "/",
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days

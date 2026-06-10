@@ -9,11 +9,18 @@ interface ProtectedVerificationRouteProps {
 }
 
 const ProtectedVerificationRoute = ({ children }: ProtectedVerificationRouteProps) => {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Students are never subject to alumni verification — let them through immediately
+    if (user?.role !== 'alumni') {
+      setIsVerified(true);
+      setIsLoading(false);
+      return;
+    }
+
     const checkVerification = async () => {
       try {
         const response = await api.get('/alumni/status', {
@@ -33,7 +40,7 @@ const ProtectedVerificationRoute = ({ children }: ProtectedVerificationRouteProp
     if (accessToken) {
       checkVerification();
     }
-  }, [accessToken]);
+  }, [accessToken, user?.role]);
 
   if (isLoading) {
     return (

@@ -52,8 +52,9 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
-    // Fail safe 
-    if (originalRequest.url?.includes("/auth/refresh")) {
+    // Never retry token refresh on auth endpoints — these 401s mean bad credentials, not expired tokens
+    const noRetryEndpoints = ["/auth/refresh", "/auth/sign-in", "/auth/sign-up"];
+    if (noRetryEndpoints.some((ep) => originalRequest.url?.includes(ep))) {
       return Promise.reject(error);
     }
     // If error is 401 and we haven't already retried this specific request
