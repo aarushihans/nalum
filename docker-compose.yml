@@ -53,11 +53,11 @@ services:
     container_name: alumni-mongo
     restart: unless-stopped
     expose:
-      - "27017"
+    - "27017"
     ports:
-      - "27018:27017"
+    - "27018:27017"
     volumes:
-      - mongo_data:/data/db
+    - /var/lib/mongodb:/data/db
 
   redis:
     image: redis:7-alpine
