@@ -72,3 +72,11 @@ jobs:
               find /var/cache/nginx -type f -delete 2>/dev/null || true
             fi
             nginx -s reload 2>/dev/null || true
+
+            if curl --fail --silent --show-error http://127.0.0.1 > /tmp/nalum-index.html; then
+              if grep -E "NotificationContext-BM_8cRqq|DashboardLayout-DxS42bbl" /tmp/nalum-index.html; then
+                echo "Public Nginx is still serving the stale frontend bundle"
+                exit 1
+              fi
+              echo "Public Nginx is serving a fresh frontend shell"
+            fi
