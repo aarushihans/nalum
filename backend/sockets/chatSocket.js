@@ -6,10 +6,18 @@ const messageHandlers = require('./handlers/messageHandlers');
 const typingHandlers = require('./handlers/typingHandlers');
 const Community = require('../models/chat/communities.model');
 
+function getAllowedOrigins() {
+  const configuredOrigin = process.env.FRONTEND_URL;
+  if (!configuredOrigin) return '*';
+
+  const withoutTrailingSlash = configuredOrigin.replace(/\/$/, '');
+  return Array.from(new Set([configuredOrigin, withoutTrailingSlash]));
+}
+
 async function initializeSocket(server) {
   const io = socketIo(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || '*',
+      origin: getAllowedOrigins(),
       credentials: true
     },
     transports: ['websocket', 'polling']

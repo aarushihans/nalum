@@ -12,7 +12,6 @@ COPY . .
 
 # Expose the API port 
 EXPOSE 2478
-EXPOSE 6379
 
 # Start the application
 CMD ["npm", "start"]
