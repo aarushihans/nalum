@@ -10,9 +10,8 @@ export const useSocket = () => {
   useEffect(() => {
     if (!accessToken) return;
 
-    // Socket.io connects directly to the backend server (not through /api prefix)
     const socketUrl = import.meta.env.MODE === "production"
-      ? import.meta.env.VITE_API_URL_PROD
+      ? window.location.origin
       : import.meta.env.VITE_API_URL_DEV;
     
     const newSocket = io(socketUrl, {
