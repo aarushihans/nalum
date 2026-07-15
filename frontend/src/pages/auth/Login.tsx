@@ -25,6 +25,7 @@ const Login = () => {
     email: "",
     password: "",
     role: "student",
+    rememberMe: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -167,10 +168,10 @@ const Login = () => {
           },
         });
       } else {
-        const errorMessage = axios.isAxiosError(error) 
+        const errorMessage = axios.isAxiosError(error)
           ? error.response?.data?.message || "Invalid email or password"
           : "Invalid email or password";
-        
+
         toast.error("Login Failed", {
           description: errorMessage,
           style: {
@@ -324,6 +325,13 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={formData.rememberMe}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rememberMe: e.target.checked,
+                    }))
+                  }
                   className="h-4 w-4 rounded border-gray-300 text-nsut-maroon focus:ring-nsut-maroon"
                 />
                 <Label htmlFor="remember-me" className="ml-2 block text-base text-gray-900">
